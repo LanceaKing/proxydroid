@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * 
+ *
+ *
  *                            ___====-_  _-====___
  *                      _--^^^#####//      \\#####^^^--_
  *                   _-^##########// (    ) \\##########^-_
@@ -39,8 +39,10 @@
 package org.proxydroid;
 
 import android.app.Application;
+import android.content.pm.ApplicationInfo;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.topjohnwu.superuser.Shell;
 
 public class ProxyDroidApplication extends Application {
 
@@ -48,7 +50,18 @@ public class ProxyDroidApplication extends Application {
 
     @Override
     public void onCreate() {
-        // Obtain the FirebaseAnalytics instance.
+        Shell.enableVerboseLogging =
+                (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+        Shell.setDefaultBuilder(Shell.Builder.create()
+                .setContext(this)
+                .setFlags(Shell.FLAG_MOUNT_MASTER)
+                .setTimeout(10));
+        Shell.EXECUTOR.execute(() -> {
+            try {
+                Shell.getShell();
+            } catch (Throwable ignored) {
+            }
+        });
         firebaseAnalytics = FirebaseAnalytics.getInstance(this);
         super.onCreate();
     }

@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "org.proxydroid"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 29
         versionCode 72
         versionName "3.2.0"
@@ -47,6 +47,7 @@ configurations {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.github.topjohnwu.libsu:core:6.0.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.google.android.material:material:1.0.0'
     implementation('com.googlecode.json-simple:json-simple:1.1.1') {
