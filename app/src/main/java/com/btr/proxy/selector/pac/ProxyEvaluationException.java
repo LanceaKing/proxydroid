@@ -2,7 +2,7 @@ package com.btr.proxy.selector.pac;
 
 /*****************************************************************************
  * Exception for PAC script errors.
- * 
+ *
  * @author Bernd Rosstauscher (proxyvole@rosstauscher.de) Copyright 2009
  ****************************************************************************/
 
@@ -20,7 +20,7 @@ public class ProxyEvaluationException extends ProxyException {
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param message
 	 *            the error message.
 	 * @param cause
@@ -33,7 +33,7 @@ public class ProxyEvaluationException extends ProxyException {
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param message
 	 *            the error message.
 	 ************************************************************************/
@@ -44,7 +44,7 @@ public class ProxyEvaluationException extends ProxyException {
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param cause
 	 *            the causing exception for exception chaining.
 	 ************************************************************************/

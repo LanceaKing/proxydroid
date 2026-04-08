@@ -14,17 +14,14 @@ public class InnerSocketBuilder {
 
 	private boolean isConnected = false;
 
-	private final String TAG = "CMWRAP->InnerSocketBuilder";
+	private static final String TAG = "InnerSocketBuilder";
 
 	/**
 	 * 建立经由代理服务器至目标服务器的连接
-	 * 
-	 * @param proxyHost
-	 *            代理服务器地址
-	 * @param proxyPort
-	 *            代理服务器端口
-	 * @param target
-	 *            目标服务器
+	 *
+	 * @param proxyHost 代理服务器地址
+	 * @param proxyPort 代理服务器端口
+	 * @param target    目标服务器
 	 */
 	public InnerSocketBuilder(String proxyHost, int proxyPort, String target) {
 		this.proxyHost = proxyHost;

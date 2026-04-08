@@ -34,7 +34,7 @@ public class FileChooser extends ListActivity {
 				else {
 					fls.add(new Option(ff.getName(),
 							getString(R.string.file_size) + ff.length(), ff
-									.getAbsolutePath()));
+							.getAbsolutePath()));
 				}
 			}
 		} catch (Exception e) {
@@ -55,8 +55,6 @@ public class FileChooser extends ListActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		((ProxyDroidApplication)getApplication())
-				.firebaseAnalytics.setCurrentScreen(this, "file_chooser", null);
 		currentDir = new File(Utils.getDataPath(this));
 		fill(currentDir);
 	}

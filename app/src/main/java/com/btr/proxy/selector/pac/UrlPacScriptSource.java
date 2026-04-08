@@ -15,7 +15,7 @@ import android.util.Log;
 /*****************************************************************************
  * Script source that will load the content of a PAC file from an webserver. The
  * script content is cached once it was downloaded.
- * 
+ *
  * @author Bernd Rosstauscher (proxyvole@rosstauscher.de) Copyright 2009
  ****************************************************************************/
 
@@ -29,7 +29,7 @@ public class UrlPacScriptSource implements PacScriptSource {
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param url
 	 *            the URL to download the script from.
 	 ************************************************************************/
@@ -42,7 +42,7 @@ public class UrlPacScriptSource implements PacScriptSource {
 
 	/*************************************************************************
 	 * getScriptContent
-	 * 
+	 *
 	 * @see com.btr.proxy.selector.pac.PacScriptSource#getScriptContent()
 	 ************************************************************************/
 
@@ -50,7 +50,7 @@ public class UrlPacScriptSource implements PacScriptSource {
 	public synchronized String getScriptContent() throws IOException {
 		if (this.scriptContent == null
 				|| (this.expireAtMillis > 0 && this.expireAtMillis > System
-						.currentTimeMillis())) {
+				.currentTimeMillis())) {
 			try {
 				if (this.scriptUrl.startsWith("file:/")
 						|| this.scriptUrl.indexOf(":/") == -1) {
@@ -69,7 +69,7 @@ public class UrlPacScriptSource implements PacScriptSource {
 
 	/*************************************************************************
 	 * Reads a PAC script from a local file.
-	 * 
+	 *
 	 * @param scriptUrl
 	 * @return the content of the script file.
 	 * @throws IOException
@@ -103,7 +103,7 @@ public class UrlPacScriptSource implements PacScriptSource {
 
 	/*************************************************************************
 	 * Downloads the script from a webserver.
-	 * 
+	 *
 	 * @param url
 	 *            the URL to the script file.
 	 * @return the script content.
@@ -155,7 +155,7 @@ public class UrlPacScriptSource implements PacScriptSource {
 	/*************************************************************************
 	 * Response Content-Type could be something like this:
 	 * application/x-ns-proxy-autoconfig; charset=UTF-8
-	 * 
+	 *
 	 * @param contentType
 	 *            header field.
 	 * @return the extracted charset if set else a default charset.

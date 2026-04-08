@@ -26,12 +26,12 @@ import java.util.List;
  * <p>
  * <b>Domain name</b> validation routines.
  * </p>
- * 
+ *
  * <p>
  * This validator provides methods for validating Internet domain names and
  * top-level domains.
  * </p>
- * 
+ *
  * <p>
  * Domain names are evaluated according to the standards <a
  * href="http://www.ietf.org/rfc/rfc1034.txt">RFC1034</a>, section 3, and <a
@@ -40,12 +40,12 @@ import java.util.List;
  * the domain name has been URL-encoded, for example, validation will fail even
  * though the equivalent plaintext version of the same name would have passed.
  * </p>
- * 
+ *
  * <p>
  * Validation is also provided for top-level domains (TLDs) as defined and
  * maintained by the Internet Assigned Numbers Authority (IANA):
  * </p>
- * 
+ *
  * <ul>
  * <li>{@link #isValidInfrastructureTld} - validates infrastructure TLDs (
  * <code>.arpa</code>, etc.)</li>
@@ -54,13 +54,13 @@ import java.util.List;
  * <li>{@link #isValidCountryCodeTld} - validates country code TLDs (
  * <code>.us, .uk, .cn</code>, etc.)</li>
  * </ul>
- * 
+ *
  * <p>
  * (<b>NOTE</b>: This class does not provide IP address lookup for domain names
  * or methods to ensure that a given domain name matches a specific IP; see
  * {@link java.net.InetAddress} for that functionality.)
  * </p>
- * 
+ *
  * @version $Revision$ $Date$
  * @since Validator 1.4
  */
@@ -86,14 +86,16 @@ public class DomainValidator implements Serializable {
 
 	/**
 	 * Returns the singleton instance of this validator.
-	 * 
+	 *
 	 * @return the singleton instance of this validator
 	 */
 	public static DomainValidator getInstance() {
 		return DOMAIN_VALIDATOR;
 	}
 
-	/** Private constructor. */
+	/**
+	 * Private constructor.
+	 */
 	private DomainValidator() {
 	}
 
@@ -101,9 +103,8 @@ public class DomainValidator implements Serializable {
 	 * Returns true if the specified <code>String</code> parses as a valid
 	 * domain name with a recognized top-level domain. The parsing is
 	 * case-sensitive.
-	 * 
-	 * @param domain
-	 *            the parameter to check for domain name syntax
+	 *
+	 * @param domain the parameter to check for domain name syntax
 	 * @return true if the parameter is a valid domain name
 	 */
 	public boolean isValid(String domain) {
@@ -119,9 +120,8 @@ public class DomainValidator implements Serializable {
 	 * Returns true if the specified <code>String</code> matches any
 	 * IANA-defined top-level domain. Leading dots are ignored if present. The
 	 * search is case-sensitive.
-	 * 
-	 * @param tld
-	 *            the parameter to check for TLD status
+	 *
+	 * @param tld the parameter to check for TLD status
 	 * @return true if the parameter is a TLD
 	 */
 	public boolean isValidTld(String tld) {
@@ -133,9 +133,8 @@ public class DomainValidator implements Serializable {
 	 * Returns true if the specified <code>String</code> matches any
 	 * IANA-defined infrastructure top-level domain. Leading dots are ignored if
 	 * present. The search is case-sensitive.
-	 * 
-	 * @param iTld
-	 *            the parameter to check for infrastructure TLD status
+	 *
+	 * @param iTld the parameter to check for infrastructure TLD status
 	 * @return true if the parameter is an infrastructure TLD
 	 */
 	public boolean isValidInfrastructureTld(String iTld) {
@@ -147,9 +146,8 @@ public class DomainValidator implements Serializable {
 	 * Returns true if the specified <code>String</code> matches any
 	 * IANA-defined generic top-level domain. Leading dots are ignored if
 	 * present. The search is case-sensitive.
-	 * 
-	 * @param gTld
-	 *            the parameter to check for generic TLD status
+	 *
+	 * @param gTld the parameter to check for generic TLD status
 	 * @return true if the parameter is a generic TLD
 	 */
 	public boolean isValidGenericTld(String gTld) {
@@ -160,9 +158,8 @@ public class DomainValidator implements Serializable {
 	 * Returns true if the specified <code>String</code> matches any
 	 * IANA-defined country code top-level domain. Leading dots are ignored if
 	 * present. The search is case-sensitive.
-	 * 
-	 * @param ccTld
-	 *            the parameter to check for country code TLD status
+	 *
+	 * @param ccTld the parameter to check for country code TLD status
 	 * @return true if the parameter is a country code TLD
 	 */
 	public boolean isValidCountryCodeTld(String ccTld) {
@@ -183,14 +180,14 @@ public class DomainValidator implements Serializable {
 	// ----- Authoritative and comprehensive list at:
 	// ----- http://data.iana.org/TLD/tlds-alpha-by-domain.txt
 
-	private static final String[] INFRASTRUCTURE_TLDS = new String[] { "arpa", // internet
-																				// infrastructure
+	private static final String[] INFRASTRUCTURE_TLDS = new String[]{"arpa", // internet
+			// infrastructure
 			"root" // diagnostic marker for non-truncated root zone
 	};
 
-	private static final String[] GENERIC_TLDS = new String[] { "aero", // air
-																		// transport
-																		// industry
+	private static final String[] GENERIC_TLDS = new String[]{"aero", // air
+			// transport
+			// industry
 			"asia", // Pan-Asia/Asia Pacific
 			"biz", // businesses
 			"cat", // Catalan linguistic/cultural community
@@ -212,8 +209,8 @@ public class DomainValidator implements Serializable {
 			"int" // organizations established by international treaty
 	};
 
-	private static final String[] COUNTRY_CODE_TLDS = new String[] { "ac", // Ascension
-																			// Island
+	private static final String[] COUNTRY_CODE_TLDS = new String[]{"ac", // Ascension
+			// Island
 			"ad", // Andorra
 			"ae", // United Arab Emirates
 			"af", // Afghanistan
@@ -228,7 +225,7 @@ public class DomainValidator implements Serializable {
 			"as", // American Samoa
 			"at", // Austria
 			"au", // Australia (includes Ashmore and Cartier Islands and Coral
-					// Sea Islands)
+			// Sea Islands)
 			"aw", // Aruba
 			"ax", // 脙鈥and
 			"az", // Azerbaijan
@@ -339,7 +336,7 @@ public class DomainValidator implements Serializable {
 			"ky", // Cayman Islands
 			"kz", // Kazakhstan
 			"la", // Laos (currently being marketed as the official domain for
-					// Los Angeles)
+			// Los Angeles)
 			"lb", // Lebanon
 			"lc", // Saint Lucia
 			"li", // Liechtenstein
@@ -396,7 +393,7 @@ public class DomainValidator implements Serializable {
 			"pn", // Pitcairn Islands
 			"pr", // Puerto Rico
 			"ps", // Palestinian territories (PA-controlled West Bank and Gaza
-					// Strip)
+			// Strip)
 			"pt", // Portugal
 			"pw", // Palau
 			"py", // Paraguay
@@ -415,7 +412,7 @@ public class DomainValidator implements Serializable {
 			"sh", // Saint Helena
 			"si", // Slovenia
 			"sj", // Svalbard and Jan Mayen Islands Not in use (Norwegian
-					// dependencies; see .no)
+			// dependencies; see .no)
 			"sk", // Slovakia
 			"sl", // Sierra Leone
 			"sm", // San Marino

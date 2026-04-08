@@ -41,28 +41,25 @@ package org.proxydroid;
 import android.app.Application;
 import android.content.pm.ApplicationInfo;
 
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.topjohnwu.superuser.Shell;
 
 public class ProxyDroidApplication extends Application {
 
-    public FirebaseAnalytics firebaseAnalytics;
-
-    @Override
-    public void onCreate() {
-        Shell.enableVerboseLogging =
-                (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-        Shell.setDefaultBuilder(Shell.Builder.create()
-                .setContext(this)
-                .setFlags(Shell.FLAG_MOUNT_MASTER)
-                .setTimeout(10));
-        Shell.EXECUTOR.execute(() -> {
-            try {
-                Shell.getShell();
-            } catch (Throwable ignored) {
-            }
-        });
-        firebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        super.onCreate();
-    }
+	@Override
+	public void onCreate() {
+		Shell.enableVerboseLogging =
+				(getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+		Shell.setDefaultBuilder(Shell.Builder.create()
+				.setContext(this)
+				.setFlags(Shell.FLAG_MOUNT_MASTER)
+				.setTimeout(10));
+		Shell.EXECUTOR.execute(() -> {
+			try {
+				Shell.getShell();
+			} catch (Throwable ignored) {
+			}
+		});
+		ProfileStore.ensureInitialized(this);
+		super.onCreate();
+	}
 }

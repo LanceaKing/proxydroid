@@ -47,6 +47,7 @@
     <string name="proxy_cat">Настройки прокси</string>
 
     <string name="host">Адрес</string>
+    <string name="host_pac">PAC</string>
     <string name="host_summary">Адрес прокси-сервера</string>
     <string name="host_pac_summary">URL вашего PAC-файла</string>
     <string name="pac">Автоматическая настройка</string>
@@ -66,6 +67,8 @@
     <string name="password_summary">Пароль прокси-сервера</string>
     <string name="ntlm">Авторизация NTLM</string>
     <string name="ntlm_summary">Включает авторизацию по NTLM / NTLM2</string>
+    <string name="certificate">Сертификат</string>
+    <string name="certificate_summary">Клиентский сертификат для HTTPS-аутентификации</string>
     <string name="domain">Домен</string>
     <string name="domain_summary">Имя Домена для NTLM-авторизации</string>
 
@@ -76,19 +79,22 @@
     <string name="ssid">Связанная сеть</string>
     <string name="ssid_summary">Связать настройки с указанным адресом 2G/3G сети
         или её SSID</string>
+    <string name="excluded_ssid">Никогда не привязывать эти Wi‑Fi SSID</string>
+    <string name="excluded_ssid_summary">Не привязывать настройки прокси к указанным SSID</string>
 
     <string name="auto_set_proxy">Для всех приложений</string>
     <string name="auto_set_proxy_summary">Включает глобальный режим (требуются права ROOT
 		и поддержка IPTABLES)</string>
+    <string name="dns_proxy">DNS-прокси</string>
     <string name="dns_proxy_summary">Включает проксирование DNS-запросов (только для опытных)</string>
 
-    <!-- settings proxyed apps category -->
-    <string name="proxyed_apps">Для выбранных приложений</string>
-    <string name="proxyed_apps_summary">Включает избирательный режим (требуются права ROOT
+    <!-- settings proxied apps category -->
+    <string name="proxied_apps">Для выбранных приложений</string>
+    <string name="proxied_apps_summary">Включает избирательный режим (требуются права ROOT
 		и поддержка IPTABLES)</string>
     <string name="bypass_apps">Инверсный режим</string>
     <string name="bypass_apps_summary">Включите чтобы НЕ проксировать выбранные приложения</string>
-    <string name="proxyed_help">Выбранные приложения:</string>
+    <string name="proxied_help">Выбранные приложения:</string>
 
     <!-- menu bar category -->
     <string name="recovery">Сброс</string>
@@ -96,6 +102,7 @@
 		выпущенный под лицензией GPL версии 3. \n\nПо всем вопросам просьба обращаться
 		на страницу пректа в googlecode. \n\n(proxydroid.googlecode.com)</string>
     <string name="about">О программе</string>
+    <string name="about_title">ProxyDroid %s</string>
     <string name="change_name">Переименовать</string>
     <string name="alert_dialog_ok">OK</string>
     <string name="alert_dialog_cancel">Отмена</string>
@@ -114,6 +121,7 @@
     <string name="profile_new">Новый Профиль</string>
     <string name="profile_base">Профиль</string>
     <string name="profile_del">Удалить</string>
+    <string name="profile_del_confirm">Удалить этот профиль?</string>
 
     <!-- proxy type -->
     <string name="proxy_type">Тип прокси-сервера</string>

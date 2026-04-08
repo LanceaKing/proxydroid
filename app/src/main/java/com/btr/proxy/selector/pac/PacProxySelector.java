@@ -8,7 +8,7 @@ import android.util.Log;
 
 /*****************************************************************************
  * ProxySelector that will use a PAC script to find an proxy for a given URI.
- * 
+ *
  * @author Bernd Rosstauscher (proxyvole@rosstauscher.de) Copyright 2009
  ****************************************************************************/
 public class PacProxySelector {
@@ -24,7 +24,7 @@ public class PacProxySelector {
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param pacSource
 	 *            the source for the PAC file.
 	 ************************************************************************/
@@ -36,7 +36,7 @@ public class PacProxySelector {
 
 	/*************************************************************************
 	 * Selects one of the available PAC parser engines.
-	 * 
+	 *
 	 * @param pacSource
 	 *            to use as input.
 	 ************************************************************************/
@@ -51,7 +51,7 @@ public class PacProxySelector {
 
 	/*************************************************************************
 	 * select
-	 * 
+	 *
 	 * @see java.net.ProxySelector#select(java.net.URI)
 	 ************************************************************************/
 	public List<Proxy> select(URI uri) {
@@ -71,11 +71,11 @@ public class PacProxySelector {
 
 	/*************************************************************************
 	 * Evaluation of the given URL with the PAC-file.
-	 * 
+	 *
 	 * Two cases can be handled here: DIRECT Fetch the object directly from the
 	 * content HTTP server denoted by its URL PROXY name:port Fetch the object
 	 * via the proxy HTTP server at the given location (name and port)
-	 * 
+	 *
 	 * @param uri
 	 *            <code>URI</code> to be evaluated.
 	 * @return <code>Proxy</code>-object list as result of the evaluation.
@@ -102,7 +102,7 @@ public class PacProxySelector {
 	/*************************************************************************
 	 * The proxy evaluator will return a proxy string. This method will take
 	 * this string and build a matching <code>Proxy</code> for it.
-	 * 
+	 *
 	 * @param pacResult
 	 *            the result from the PAC parser.
 	 * @return a Proxy

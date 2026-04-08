@@ -63,7 +63,7 @@
     <string name="password">Mot de passe</string>
     <string name="password_summary">Mot de passe du Proxy</string>
     <string name="ntlm">Authentication NTLM</string>
-    <string name="ntlm_summary">Activer le support de la méthode d\'authentification 
+    <string name="ntlm_summary">Activer le support de la méthode d\'authentification
 		NTLM / NTLM2</string>
     <string name="certificate">Certificat</string>
     <string name="certificate_summary">Certificat Client pour l\'authentification HTTPS</string>
@@ -92,14 +92,14 @@
     <string name="dns_proxy_summary">Activer le Proxy DNS pour certains utilisateurs LAN. Ne l\'activez
  		que si vous savez ce que c\'est</string>
 
-    <!-- settings proxyed apps category -->
-    <string name="proxyed_apps">Proxy Individuel</string>
-    <string name="proxyed_apps_summary">Selectionner les applications à proxyfier où à contourner (nécessite les droits ROOT
+    <!-- settings proxied apps category -->
+    <string name="proxied_apps">Proxy Individuel</string>
+    <string name="proxied_apps_summary">Selectionner les applications à proxyfier où à contourner (nécessite les droits ROOT
 		et
 		le support IPTABLES)</string>
     <string name="bypass_apps">Mode de Contournement</string>
     <string name="bypass_apps_summary">Activer cette option pour contourner les applications sélectionnées au lieu de les proxyfier</string>
-    <string name="proxyed_help">Selectionner les applications à utiliser avec ProxyDroid :</string>
+    <string name="proxied_help">Selectionner les applications à utiliser avec ProxyDroid :</string>
 
     <!-- menu bar category -->
     <string name="recovery">Réinitialiser</string>

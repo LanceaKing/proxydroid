@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * sensitive</i> but constructors are provided to allow <i>case in-sensitive</i>
  * validation. For example to create a validator which does <i>case
  * in-sensitive</i> validation for a set of regular expressions:
- * 
+ *
  * <pre>
  *         String[] regexs = new String[] {...};
  *         RegexValidator validator = new RegexValidator(regexs, false);
@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
  * <p>
  * Cached instances pre-compile and re-use {@link Pattern}(s) - which according
  * to the {@link Pattern} API are safe to use in a multi-threaded environment.
- * 
+ *
  * @version $Revision$ $Date$
  * @since Validator 1.4
  */
@@ -62,9 +62,8 @@ public class RegexValidator implements Serializable {
 	/**
 	 * Construct a <i>case sensitive</i> validator for a single regular
 	 * expression.
-	 * 
-	 * @param regex
-	 *            The regular expression this validator will validate against
+	 *
+	 * @param regex The regular expression this validator will validate against
 	 */
 	public RegexValidator(String regex) {
 		this(regex, true);
@@ -73,24 +72,21 @@ public class RegexValidator implements Serializable {
 	/**
 	 * Construct a validator for a single regular expression with the specified
 	 * case sensitivity.
-	 * 
-	 * @param regex
-	 *            The regular expression this validator will validate against
-	 * @param caseSensitive
-	 *            when <code>true</code> matching is <i>case sensitive</i>,
-	 *            otherwise matching is <i>case in-sensitive</i>
+	 *
+	 * @param regex         The regular expression this validator will validate against
+	 * @param caseSensitive when <code>true</code> matching is <i>case sensitive</i>,
+	 *                      otherwise matching is <i>case in-sensitive</i>
 	 */
 	public RegexValidator(String regex, boolean caseSensitive) {
-		this(new String[] { regex }, caseSensitive);
+		this(new String[]{regex}, caseSensitive);
 	}
 
 	/**
 	 * Construct a <i>case sensitive</i> validator that matches any one of the
 	 * set of regular expressions.
-	 * 
-	 * @param regexs
-	 *            The set of regular expressions this validator will validate
-	 *            against
+	 *
+	 * @param regexs The set of regular expressions this validator will validate
+	 *               against
 	 */
 	public RegexValidator(String[] regexs) {
 		this(regexs, true);
@@ -99,13 +95,11 @@ public class RegexValidator implements Serializable {
 	/**
 	 * Construct a validator that matches any one of the set of regular
 	 * expressions with the specified case sensitivity.
-	 * 
-	 * @param regexs
-	 *            The set of regular expressions this validator will validate
-	 *            against
-	 * @param caseSensitive
-	 *            when <code>true</code> matching is <i>case sensitive</i>,
-	 *            otherwise matching is <i>case in-sensitive</i>
+	 *
+	 * @param regexs        The set of regular expressions this validator will validate
+	 *                      against
+	 * @param caseSensitive when <code>true</code> matching is <i>case sensitive</i>,
+	 *                      otherwise matching is <i>case in-sensitive</i>
 	 */
 	public RegexValidator(String[] regexs, boolean caseSensitive) {
 		if (regexs == null || regexs.length == 0) {
@@ -125,11 +119,10 @@ public class RegexValidator implements Serializable {
 
 	/**
 	 * Validate a value against the set of regular expressions.
-	 * 
-	 * @param value
-	 *            The value to validate.
+	 *
+	 * @param value The value to validate.
 	 * @return <code>true</code> if the value is valid otherwise
-	 *         <code>false</code>.
+	 * <code>false</code>.
 	 */
 	public boolean isValid(String value) {
 		if (value == null) {
@@ -146,11 +139,10 @@ public class RegexValidator implements Serializable {
 	/**
 	 * Validate a value against the set of regular expressions returning the
 	 * array of matched groups.
-	 * 
-	 * @param value
-	 *            The value to validate.
+	 *
+	 * @param value The value to validate.
 	 * @return String array of the <i>groups</i> matched if valid or
-	 *         <code>null</code> if invalid
+	 * <code>null</code> if invalid
 	 */
 	public String[] match(String value) {
 		if (value == null) {
@@ -173,11 +165,10 @@ public class RegexValidator implements Serializable {
 	/**
 	 * Validate a value against the set of regular expressions returning a
 	 * String value of the aggregated groups.
-	 * 
-	 * @param value
-	 *            The value to validate.
+	 *
+	 * @param value The value to validate.
 	 * @return Aggregated String value comprised of the <i>groups</i> matched if
-	 *         valid or <code>null</code> if invalid
+	 * valid or <code>null</code> if invalid
 	 */
 	public String validate(String value) {
 		if (value == null) {
@@ -205,7 +196,7 @@ public class RegexValidator implements Serializable {
 
 	/**
 	 * Provide a String representation of this validator.
-	 * 
+	 *
 	 * @return A String representation of this validator
 	 */
 	@Override

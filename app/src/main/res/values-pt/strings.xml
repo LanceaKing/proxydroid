@@ -75,6 +75,8 @@
     <string name="auto_connect_summary">Iniciar o Proxy quando a rede definida estiver disponível</string>
     <string name="ssid">Rede associada</string>
     <string name="ssid_summary">Associar a configuração do proxy à rede 2G/3G ou ao SSID especificado</string>
+    <string name="excluded_ssid">Nunca vincular estes SSID Wi‑Fi</string>
+    <string name="excluded_ssid_summary">Nunca vincular as definições de proxy aos SSID indicados</string>
 
     <string-array name="ssid_default_values"></string-array>
     <string-array name="ssid_default_entries"></string-array>
@@ -84,12 +86,12 @@
     <string name="dns_proxy">Proxy DNS</string>
     <string name="dns_proxy_summary">Ativar o Proxy DNS para alguns utilizadores de LAN. Ligar apenas se souber o que isto é</string>
 
-     <!-- settings proxyed apps category -->
-    <string name="proxyed_apps">Proxy Individual</string>
-    <string name="proxyed_apps_summary">Selecione aplicações para intermediar ou ignorar (necessita de acesso ROOT e suporte ao IPTABLES)</string>
+     <!-- settings proxied apps category -->
+    <string name="proxied_apps">Proxy Individual</string>
+    <string name="proxied_apps_summary">Selecione aplicações para intermediar ou ignorar (necessita de acesso ROOT e suporte ao IPTABLES)</string>
     <string name="bypass_apps">Ignorar</string>
     <string name="bypass_apps_summary">Ative esta opção para ignorar as aplicações selecionadas em vez de as intermediar</string>
-    <string name="proxyed_help">Selecione as aplicações que utilizarão o ProxyDroid:</string>
+    <string name="proxied_help">Selecione as aplicações que utilizarão o ProxyDroid:</string>
 
     <!-- menu bar category -->
     <string name="recovery">Repor</string>

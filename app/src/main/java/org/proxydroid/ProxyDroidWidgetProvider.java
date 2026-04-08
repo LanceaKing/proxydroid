@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * 
+ *
+ *
  *                            ___====-_  _-====___
  *                      _--^^^#####//      \\#####^^^--_
  *                   _-^##########// (    ) \\##########^-_
@@ -44,9 +44,6 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -56,11 +53,11 @@ public class ProxyDroidWidgetProvider extends AppWidgetProvider {
 
 	public static final String PROXY_SWITCH_ACTION = "org.proxydroid.ProxyDroidWidgetProvider.PROXY_SWITCH_ACTION";
 	public static final String SERVICE_NAME = "org.proxydroid.ProxyDroidService";
-	public static final String TAG = "ProxyDroidWidgetProvider";
+	public static final String TAG = "ProxyDroidWidget";
 
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
-			int[] appWidgetIds) {
+						 int[] appWidgetIds) {
 		final int N = appWidgetIds.length;
 
 		// Perform this loop procedure for each App Widget that belongs to this
@@ -114,43 +111,18 @@ public class ProxyDroidWidgetProvider extends AppWidgetProvider {
 			Log.d(TAG, "Proxy switch action");
 			// do some really cool stuff here
 			if (Utils.isWorking()) {
-				// Service is working, so stop it
 				try {
-					context.stopService(new Intent(context,
-							ProxyDroidService.class));
+					ProxyServiceHelper.stopProxyService(context);
 				} catch (Exception e) {
 					// Nothing
 				}
 
 			} else {
 
-				// Service is not working, then start it
-				SharedPreferences settings = PreferenceManager
-						.getDefaultSharedPreferences(context);
-
-				Profile mProfile = new Profile();
-				mProfile.getProfile(settings);
-
-				Intent it = new Intent(context, ProxyDroidService.class);
-				Bundle bundle = new Bundle();
-				bundle.putString("host", mProfile.getHost());
-				bundle.putString("user", mProfile.getUser());
-				bundle.putString("bypassAddrs", mProfile.getBypassAddrs());
-				bundle.putString("password", mProfile.getPassword());
-				bundle.putString("domain", mProfile.getDomain());
-
-				bundle.putString("proxyType", mProfile.getProxyType());
-				bundle.putBoolean("isAutoSetProxy", mProfile.isAutoSetProxy());
-				bundle.putBoolean("isBypassApps", mProfile.isBypassApps());
-				bundle.putBoolean("isAuth", mProfile.isAuth());
-				bundle.putBoolean("isNTLM", mProfile.isNTLM());
-				bundle.putBoolean("isDNSProxy", mProfile.isDNSProxy());
-				bundle.putBoolean("isPAC", mProfile.isPAC());
-
-				bundle.putInt("port", mProfile.getPort());
-
-				it.putExtras(bundle);
-				context.startService(it);
+				Profile mProfile = ProfileStore.loadActiveProfile(context);
+				if (mProfile != null) {
+					ProxyServiceHelper.startProxyService(context, mProfile);
+				}
 
 			}
 

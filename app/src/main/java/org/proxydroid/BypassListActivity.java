@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * 
+ *
+ *
  *                            ___====-_  _-====___
  *                      _--^^^#####//      \\#####^^^--_
  *                   _-^##########// (    ) \\##########^-_
@@ -40,13 +40,13 @@ package org.proxydroid;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -100,36 +100,36 @@ public class BypassListActivity extends AppCompatActivity implements
 		public void handleMessage(Message msg) {
 			String addr;
 			switch (msg.what) {
-			case MSG_ERR_ADDR:
-				Toast.makeText(BypassListActivity.this, R.string.err_addr,
-						Toast.LENGTH_LONG).show();
-				break;
-			case MSG_ADD_ADDR:
-				if (msg.obj == null)
+				case MSG_ERR_ADDR:
+					Toast.makeText(BypassListActivity.this, R.string.err_addr,
+							Toast.LENGTH_LONG).show();
+					break;
+				case MSG_ADD_ADDR:
+					if (msg.obj == null)
+						return;
+					addr = (String) msg.obj;
+					bypassList.add(addr);
+					break;
+				case MSG_EDIT_ADDR:
+					if (msg.obj == null)
+						return;
+					addr = (String) msg.obj;
+					bypassList.set(msg.arg1, addr);
+					break;
+				case MSG_DEL_ADDR:
+					bypassList.remove(msg.arg1);
+					break;
+				case MSG_PRESET_ADDR:
+					String[] list = Constraints.PRESETS[msg.arg1];
+					reset(list);
 					return;
-				addr = (String) msg.obj;
-				bypassList.add(addr);
-				break;
-			case MSG_EDIT_ADDR:
-				if (msg.obj == null)
+				case MSG_EXPORT_ADDR:
+					if (msg.obj == null)
+						return;
+					Toast.makeText(BypassListActivity.this,
+							getString(R.string.exporting) + " " + (String) msg.obj,
+							Toast.LENGTH_LONG).show();
 					return;
-				addr = (String) msg.obj;
-				bypassList.set(msg.arg1, addr);
-				break;
-			case MSG_DEL_ADDR:
-				bypassList.remove(msg.arg1);
-				break;
-			case MSG_PRESET_ADDR:
-				String[] list = Constraints.PRESETS[msg.arg1];
-				reset(list);
-				return;
-			case MSG_EXPORT_ADDR:
-				if (msg.obj == null)
-					return;
-				Toast.makeText(BypassListActivity.this,
-						getString(R.string.exporting) + " " + (String) msg.obj,
-						Toast.LENGTH_LONG).show();
-				return;
 			}
 			refreshList();
 			super.handleMessage(msg);
@@ -153,15 +153,15 @@ public class BypassListActivity extends AppCompatActivity implements
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case android.R.id.home:
-			// app icon in action bar clicked; go home
+			case android.R.id.home:
+				// app icon in action bar clicked; go home
 //			Intent intent = new Intent(this, ProxyDroid.class);
 //			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 //			startActivity(intent);
-			finish();
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
+				finish();
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
 		}
 	}
 
@@ -190,13 +190,13 @@ public class BypassListActivity extends AppCompatActivity implements
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
-			long id) {
+							long id) {
 		editAddr(MSG_EDIT_ADDR, position);
 	}
 
 	@Override
 	public boolean onItemLongClick(AdapterView<?> parent, View view,
-			int position, long id) {
+								   int position, long id) {
 		delAddr(position);
 		return true;
 	}
@@ -208,7 +208,7 @@ public class BypassListActivity extends AppCompatActivity implements
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-									int whichButton) {
+												int whichButton) {
 								/* User clicked Cancel so do some stuff */
 							}
 						})
@@ -216,7 +216,7 @@ public class BypassListActivity extends AppCompatActivity implements
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-									int which) {
+												int which) {
 								if (which >= 0
 										&& which < Constraints.PRESETS.length) {
 									Message msg = new Message();
@@ -232,6 +232,7 @@ public class BypassListActivity extends AppCompatActivity implements
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == Constraints.IMPORT_REQUEST) {
 			if (resultCode == RESULT_OK) {
 				if (data == null)
@@ -308,7 +309,7 @@ public class BypassListActivity extends AppCompatActivity implements
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-									int whichButton) {
+												int whichButton) {
 								if (path.getText() == null
 										|| path.getText().toString() == null)
 									dialog.dismiss();
@@ -357,7 +358,7 @@ public class BypassListActivity extends AppCompatActivity implements
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-									int whichButton) {
+												int whichButton) {
 								/* User clicked cancel so do some stuff */
 							}
 						}).create();
@@ -375,7 +376,7 @@ public class BypassListActivity extends AppCompatActivity implements
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-									int whichButton) {
+												int whichButton) {
 								/* User clicked OK so do some stuff */
 								Message msg = new Message();
 								msg.what = MSG_DEL_ADDR;
@@ -388,7 +389,7 @@ public class BypassListActivity extends AppCompatActivity implements
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-									int whichButton) {
+												int whichButton) {
 								/* User clicked Cancel so do some stuff */
 							}
 						}).create();
@@ -415,7 +416,7 @@ public class BypassListActivity extends AppCompatActivity implements
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-									int whichButton) {
+												int whichButton) {
 								/* User clicked OK so do some stuff */
 
 								new Thread() {
@@ -444,7 +445,7 @@ public class BypassListActivity extends AppCompatActivity implements
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-									int whichButton) {
+												int whichButton) {
 
 								/* User clicked cancel so do some stuff */
 							}
@@ -483,15 +484,24 @@ public class BypassListActivity extends AppCompatActivity implements
 
 	private void refreshList() {
 
-		SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(this);
-
-		profile.getProfile(settings);
+		Profile active = ProfileStore.loadActiveProfile(this);
+		if (active != null) {
+			profile = active;
+		}
 
 		if (bypassList != null) {
 			profile.setBypassAddrs(Profile.encodeAddrs(bypassList
 					.toArray(new String[bypassList.size()])));
-			profile.setProfile(settings);
+			long id = ProfileStore.getActiveProfileId(this);
+			if (id >= 0) {
+				ContentValues cv = new ContentValues();
+				cv.put(Profile.Columns.BYPASS_ADDRS, profile.getBypassAddrs());
+				getContentResolver().update(
+						ContentUris.withAppendedId(ProxyDroidCLI.CONTENT_URI, id),
+						cv,
+						null,
+						null);
+			}
 		}
 
 		String[] addrs = Profile.decodeAddrs(profile.getBypassAddrs());

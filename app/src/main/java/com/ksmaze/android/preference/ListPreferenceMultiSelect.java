@@ -5,128 +5,112 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 package com.ksmaze.android.preference;
 
-import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.preference.ListPreference;
-import android.preference.Preference;
 import android.util.AttributeSet;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.ListPreference;
+
 /**
- * A {@link Preference} that displays a list of entries as a dialog and allows
- * multiple selections
- * <p>
- * This preference will store a string into the SharedPreferences. This string
- * will be the values selected from the {@link #setEntryValues(CharSequence[])}
- * array.
- * </p>
+ * Multi-select list stored as a single string (see {@link #SEPARATOR}).
+ * Uses a custom dialog because AndroidX {@link ListPreference} is single-choice only.
  */
 public class ListPreferenceMultiSelect extends ListPreference {
-  // Need to make sure the SEPARATOR is unique and weird enough that it
-  // doesn't match one of the entries.
-  // Not using any fancy symbols because this is interpreted as a regex for
-  // splitting strings.
-  private static final String SEPARATOR = " , ";
 
-  private boolean[] mClickedDialogEntryIndices;
+	private static final String SEPARATOR = " , ";
 
-  public ListPreferenceMultiSelect(Context context, AttributeSet attrs) {
-    super(context, attrs);
+	private boolean[] mClickedDialogEntryIndices;
 
-    mClickedDialogEntryIndices = new boolean[getEntries().length];
-  }
+	public ListPreferenceMultiSelect(Context context, AttributeSet attrs) {
+		this(context, attrs, androidx.preference.R.attr.dialogPreferenceStyle, 0);
+	}
 
-  @Override
-  public void setEntries(CharSequence[] entries) {
-    super.setEntries(entries);
-    mClickedDialogEntryIndices = new boolean[entries.length];
-  }
+	public ListPreferenceMultiSelect(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+		super(context, attrs, defStyleAttr, defStyleRes);
+		mClickedDialogEntryIndices = new boolean[Math.max(0, getEntries().length)];
+	}
 
-  public ListPreferenceMultiSelect(Context context) {
-    this(context, null);
-  }
+	@Override
+	public void setEntries(CharSequence[] entries) {
+		super.setEntries(entries);
+		mClickedDialogEntryIndices = new boolean[entries.length];
+	}
 
-  @Override
-  protected void onPrepareDialogBuilder(Builder builder) {
-    CharSequence[] entries = getEntries();
-    CharSequence[] entryValues = getEntryValues();
+	@Override
+	public void onClick() {
+		CharSequence[] entries = getEntries();
+		CharSequence[] entryValues = getEntryValues();
+		if (entries == null || entryValues == null || entries.length != entryValues.length) {
+			return;
+		}
+		if (mClickedDialogEntryIndices.length != entries.length) {
+			mClickedDialogEntryIndices = new boolean[entries.length];
+		}
+		restoreCheckedEntries();
+		new AlertDialog.Builder(getContext())
+				.setTitle(getDialogTitle())
+				.setMultiChoiceItems(entries, mClickedDialogEntryIndices,
+						new DialogInterface.OnMultiChoiceClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+								mClickedDialogEntryIndices[which] = isChecked;
+							}
+						})
+				.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						StringBuilder value = new StringBuilder();
+						for (int i = 0; i < entryValues.length; i++) {
+							if (mClickedDialogEntryIndices[i]) {
+								value.append(entryValues[i]).append(SEPARATOR);
+							}
+						}
+						String val = value.toString();
+						if (val.length() > 0) {
+							val = val.substring(0, val.length() - SEPARATOR.length());
+						}
+						if (callChangeListener(val)) {
+							setValue(val);
+						}
+					}
+				})
+				.setNegativeButton(android.R.string.cancel, null)
+				.show();
+	}
 
-    if (entries == null || entryValues == null
-        || entries.length != entryValues.length) {
-      throw new IllegalStateException(
-          "ListPreference requires an entries array and an entryValues array which are both the same length");
-    }
+	public static String[] parseStoredValue(CharSequence val) {
+		if (val == null) {
+			return null;
+		}
+		if ("".equals(val)) {
+			return null;
+		}
+		return ((String) val).split(SEPARATOR);
+	}
 
-    restoreCheckedEntries();
-    builder.setMultiChoiceItems(entries, mClickedDialogEntryIndices,
-        new DialogInterface.OnMultiChoiceClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which,
-                              boolean val) {
-            mClickedDialogEntryIndices[which] = val;
-          }
-        });
-  }
-
-  public static String[] parseStoredValue(CharSequence val) {
-    if (val == null)
-      return null;
-    if ("".equals(val))
-      return null;
-    else
-      return ((String) val).split(SEPARATOR);
-  }
-
-  private void restoreCheckedEntries() {
-    CharSequence[] entryValues = getEntryValues();
-
-    String[] vals = parseStoredValue(getValue());
-    if (vals != null) {
-      for (String val1 : vals) {
-        String val = val1.trim();
-        for (int i = 0; i < entryValues.length; i++) {
-          CharSequence entry = entryValues[i];
-          if (entry.equals(val)) {
-            mClickedDialogEntryIndices[i] = true;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  @Override
-  protected void onDialogClosed(boolean positiveResult) {
-    // super.onDialogClosed(positiveResult);
-
-    CharSequence[] entryValues = getEntryValues();
-    if (positiveResult && entryValues != null) {
-      StringBuffer value = new StringBuffer();
-      for (int i = 0; i < entryValues.length; i++) {
-        if (mClickedDialogEntryIndices[i]) {
-          value.append(entryValues[i]).append(SEPARATOR);
-        }
-      }
-
-      if (callChangeListener(value)) {
-        String val = value.toString();
-        if (val.length() > 0)
-          val = val.substring(0, val.length() - SEPARATOR.length());
-        setValue(val);
-      }
-    }
-  }
+	private void restoreCheckedEntries() {
+		CharSequence[] entryValues = getEntryValues();
+		if (entryValues == null) {
+			return;
+		}
+		java.util.Arrays.fill(mClickedDialogEntryIndices, false);
+		String[] vals = parseStoredValue(getValue());
+		if (vals == null) {
+			return;
+		}
+		for (String val1 : vals) {
+			String val = val1.trim();
+			for (int i = 0; i < entryValues.length; i++) {
+				if (entryValues[i].equals(val)) {
+					mClickedDialogEntryIndices[i] = true;
+					break;
+				}
+			}
+		}
+	}
 }

@@ -21,7 +21,7 @@ import android.util.Log;
  * "http://homepages.tesco.net/~J.deBoynePollard/FGA/web-browser-auto-proxy-configuration.html"
  * >web-browser-auto-proxy-configuration</a>
  * </p>
- * 
+ *
  * @author Bernd Rosstauscher (proxyvole@rosstauscher.de) Copyright 2009
  ****************************************************************************/
 
@@ -33,10 +33,10 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	private final static String TAG = "ProxyDroid.PAC";
 
 	// Define some PAC script functions. These functions are not part of ECMA.
-	private static final String[] JS_FUNCTION_NAMES = { "shExpMatch",
+	private static final String[] JS_FUNCTION_NAMES = {"shExpMatch",
 			"dnsResolve", "isResolvable", "isInNet", "dnsDomainIs",
 			"isPlainHostName", "myIpAddress", "dnsDomainLevels",
-			"localHostOrDomainIs", "weekdayRange", "dateRange", "timeRange" };
+			"localHostOrDomainIs", "weekdayRange", "dateRange", "timeRange"};
 
 	private Scriptable scope;
 	private PacScriptSource source;
@@ -44,7 +44,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param source
 	 *            the source for the PAC script.
 	 * @throws ProxyEvaluationException
@@ -61,7 +61,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 
 	/*************************************************************************
 	 * Initializes the JavaScript engine.
-	 * 
+	 *
 	 * @throws ProxyEvaluationException
 	 *             on error.
 	 ************************************************************************/
@@ -82,7 +82,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 
 	/***************************************************************************
 	 * Gets the source of the PAC script used by this parser.
-	 * 
+	 *
 	 * @return a PacScriptSource.
 	 **************************************************************************/
 
@@ -93,7 +93,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 
 	/*************************************************************************
 	 * Evaluates the given URL and host against the PAC script.
-	 * 
+	 *
 	 * @param url
 	 *            the URL to evaluate.
 	 * @param host
@@ -146,7 +146,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 
 	/*************************************************************************
 	 * Tests if the given name is a plain host name without a domain name.
-	 * 
+	 *
 	 * @param host
 	 *            the host name from the URL (excluding port number)
 	 * @return true if there is no domain name in the host name (no dots).
@@ -158,7 +158,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 
 	/*************************************************************************
 	 * Tests if an URL is in a given domain.
-	 * 
+	 *
 	 * @param host
 	 *            is the host name from the URL.
 	 * @param domain
@@ -174,7 +174,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 * Is true if the host name matches exactly the specified host name, or if
 	 * there is no domain name part in the host name, but the unqualified host
 	 * name matches.
-	 * 
+	 *
 	 * @param host
 	 *            the host name from the URL.
 	 * @param domain
@@ -188,7 +188,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 
 	/*************************************************************************
 	 * Tries to resolve the host name. Returns true if succeeds.
-	 * 
+	 *
 	 * @param host
 	 *            is the host name from the URL.
 	 * @return true if resolvable else false.
@@ -202,10 +202,10 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 * Returns true if the IP address of the host matches the specified IP
 	 * address pattern. Pattern and mask specification is done the same way as
 	 * for SOCKS configuration.
-	 * 
+	 *
 	 * Example: isInNet(host, "198.95.0.0", "255.255.0.0") is true if the IP
 	 * address of the host matches 198.95.*.*.
-	 * 
+	 *
 	 * @param host
 	 *            a DNS host name, or IP address. If a host name is passed, it
 	 *            will be resolved into an IP address by this function.
@@ -225,7 +225,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	/*************************************************************************
 	 * Resolves the given DNS host name into an IP address, and returns it in
 	 * the dot separated format as a string.
-	 * 
+	 *
 	 * @param host
 	 *            the host to resolve.
 	 * @return the resolved IP, empty string if not resolvable.
@@ -238,7 +238,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	/*************************************************************************
 	 * Returns the IP address of the host that the process is running on, as a
 	 * string in the dot-separated integer format.
-	 * 
+	 *
 	 * @return an IP as string.
 	 ************************************************************************/
 
@@ -249,7 +249,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	/*************************************************************************
 	 * Returns the number of DNS domain levels (number of dots) in the host
 	 * name.
-	 * 
+	 *
 	 * @param host
 	 *            is the host name from the URL.
 	 * @return number of DNS domain levels.
@@ -263,7 +263,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 * Returns true if the string matches the specified shell expression.
 	 * Actually, currently the patterns are shell expressions, not regular
 	 * expressions.
-	 * 
+	 *
 	 * @param str
 	 *            is any string to compare (e.g. the URL, or the host name).
 	 * @param shexp
@@ -284,7 +284,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 * condition is true if the current weekday is in between those two
 	 * weekdays. Bounds are inclusive. If the "GMT" parameter is specified,
 	 * times are taken to be in GMT, otherwise the local time zone is used.
-	 * 
+	 *
 	 * @param wd1
 	 *            weekday 1 is one of SUN MON TUE WED THU FRI SAT
 	 * @param wd2
@@ -303,7 +303,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 * based methods will use this calendar to determine the current time
 	 * instead of the real time. This is only be used by unit tests and is not
 	 * part of the public API.
-	 * 
+	 *
 	 * @param cal
 	 *            a Calendar to set.
 	 ************************************************************************/
@@ -320,7 +320,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 * and "to" are specified then the bounds are inclusive. If the "GMT"
 	 * parameter is specified, times are taken to be in GMT, otherwise the local
 	 * time zone is used.
-	 * 
+	 *
 	 * @param day1
 	 *            is the day of month between 1 and 31 (as an integer).
 	 * @param month1
@@ -341,7 +341,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 ************************************************************************/
 
 	public static boolean dateRange(Object day1, Object month1, Object year1,
-			Object day2, Object month2, Object year2, Object gmt) {
+									Object day2, Object month2, Object year2, Object gmt) {
 		return SCRIPT_METHODS.dateRange(day1, month1, year1, day2, month2,
 				year2, gmt);
 	}
@@ -353,7 +353,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 * it's value. If "from" and "to" are specified then the bounds are
 	 * inclusive. If the "GMT" parameter is specified, times are taken to be in
 	 * GMT, otherwise the local time zone is used.<br/>
-	 * 
+	 *
 	 * <pre>
 	 * timeRange(hour)
 	 * timeRange(hour1, hour2)
@@ -361,7 +361,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 * timeRange(hour1, min1, sec1, hour2, min2, sec2)
 	 * timeRange(hour1, min1, sec1, hour2, min2, sec2, gmt)
 	 * </pre>
-	 * 
+	 *
 	 * @param hour1
 	 *            is the hour from 0 to 23. (0 is midnight, 23 is 11 pm.)
 	 * @param min1
@@ -380,7 +380,7 @@ public class RhinoPacScriptParser extends ScriptableObject implements
 	 ************************************************************************/
 
 	public static boolean timeRange(Object hour1, Object min1, Object sec1,
-			Object hour2, Object min2, Object sec2, Object gmt) {
+									Object hour2, Object min2, Object sec2, Object gmt) {
 		return SCRIPT_METHODS.timeRange(hour1, min1, sec1, hour2, min2, sec2,
 				gmt);
 	}

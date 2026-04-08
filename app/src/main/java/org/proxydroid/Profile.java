@@ -17,8 +17,9 @@
  */
 package org.proxydroid;
 
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.provider.BaseColumns;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -26,14 +27,64 @@ import org.json.simple.parser.ParseException;
 
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 /**
  * @author KsMaze
- * 
+ *
  */
 public class Profile implements Serializable {
+
+	public static final String TABLE_NAME = "profiles";
+
+	public static final class Columns implements BaseColumns {
+		public static final String PROFILE_NAME = "profileName";
+		public static final String HOST = "host";
+		public static final String PORT = "port";
+		public static final String BYPASS_ADDRS = "bypassAddrs";
+		public static final String PROXIED_APPS = "proxiedApps";
+		public static final String USER = "user";
+		public static final String PASSWORD = "password";
+		public static final String IS_AUTH = "isAuth";
+		public static final String IS_NTLM = "isNTLM";
+		public static final String DOMAIN = "domain";
+		public static final String PROXY_TYPE = "proxyType";
+		public static final String CERTIFICATE = "certificate";
+		public static final String IS_AUTO_CONNECT = "isAutoConnect";
+		public static final String IS_AUTO_SET_PROXY = "isAutoSetProxy";
+		public static final String IS_BYPASS_APPS = "isBypassApps";
+		public static final String IS_PAC = "isPAC";
+		public static final String IS_DNS_PROXY = "isDNSProxy";
+		public static final String SSID = "ssid";
+		public static final String EXCLUDED_SSID = "excludedSsid";
+
+		public static final String[] ALL_COLUMNS = {
+				_ID,
+				PROFILE_NAME,
+				HOST,
+				PROXY_TYPE,
+				PORT,
+				BYPASS_ADDRS,
+				USER,
+				PASSWORD,
+				CERTIFICATE,
+				PROXIED_APPS,
+				IS_AUTH,
+				IS_NTLM,
+				IS_AUTO_CONNECT,
+				IS_AUTO_SET_PROXY,
+				IS_BYPASS_APPS,
+				IS_DNS_PROXY,
+				IS_PAC,
+				DOMAIN,
+				SSID,
+				EXCLUDED_SSID
+		};
+
+		private Columns() {
+		}
+	}
 
 	private String name;
 	private String host;
@@ -42,10 +93,10 @@ public class Profile implements Serializable {
 	private String bypassAddrs;
 	private String user;
 	private String password;
-        private String certificate;
-	private String proxyedApps;
+	private String certificate;
+	private String proxiedApps;
 	private boolean isAutoConnect = false;
-	private boolean isAutoSetProxy = false;
+	private boolean isAutoSetProxy = true;
 	private boolean isBypassApps = false;
 	private boolean isAuth = false;
 	private boolean isNTLM = false;
@@ -60,65 +111,6 @@ public class Profile implements Serializable {
 		init();
 	}
 
-	public void getProfile(SharedPreferences settings) {
-		name = settings.getString("profileName", "");
-
-		host = settings.getString("host", "");
-		proxyType = settings.getString("proxyType", "http");
-		user = settings.getString("user", "");
-		password = settings.getString("password", "");
-		ssid = settings.getString("ssid", "");
-		excludedSsid = settings.getString("excludedSsid", "");
-		bypassAddrs = settings.getString("bypassAddrs", "");
-		proxyedApps = settings.getString("Proxyed", "");
-		domain = settings.getString("domain", "");
-                certificate = settings.getString("certificate", "");
-
-		isAuth = settings.getBoolean("isAuth", false);
-		isNTLM = settings.getBoolean("isNTLM", false);
-		isAutoSetProxy = settings.getBoolean("isAutoSetProxy", false);
-		isBypassApps = settings.getBoolean("isBypassApps", false);
-		isDNSProxy = settings.getBoolean("isDNSProxy", false);
-		isPAC = settings.getBoolean("isPAC", false);
-		isAutoConnect = settings.getBoolean("isAutoConnect", false);
-
-		String portText = settings.getString("port", "");
-
-		if (name.equals("")) {
-			name = host + ":" + port + "." + proxyType;
-		}
-
-		try {
-			port = Integer.valueOf(portText);
-		} catch (Exception e) {
-			port = 3128;
-		}
-	}
-
-	public void setProfile(SharedPreferences settings) {
-		Editor ed = settings.edit();
-		ed.putString("profileName", name);
-		ed.putString("host", host);
-		ed.putString("port", Integer.toString(port));
-		ed.putString("bypassAddrs", bypassAddrs);
-		ed.putString("Proxyed", proxyedApps);
-		ed.putString("user", user);
-		ed.putString("password", password);
-		ed.putBoolean("isAuth", isAuth);
-		ed.putBoolean("isNTLM", isNTLM);
-		ed.putString("domain", domain);
-		ed.putString("proxyType", proxyType);
-                ed.putString("certificate", certificate);
-		ed.putBoolean("isAutoConnect", isAutoConnect);
-		ed.putBoolean("isAutoSetProxy", isAutoSetProxy);
-		ed.putBoolean("isBypassApps", isBypassApps);
-		ed.putBoolean("isPAC", isPAC);
-		ed.putBoolean("isDNSProxy", isDNSProxy);
-		ed.putString("ssid", ssid);
-		ed.putString("excludedSsid", excludedSsid);
-		ed.commit();
-	}
-
 	public void init() {
 		host = "";
 		port = 3128;
@@ -126,7 +118,7 @@ public class Profile implements Serializable {
 		user = "";
 		domain = "";
 		password = "";
-                certificate = "";
+		certificate = "";
 		isAuth = false;
 		proxyType = "http";
 		isAutoConnect = false;
@@ -134,112 +126,10 @@ public class Profile implements Serializable {
 		excludedSsid = "";
 		isNTLM = false;
 		bypassAddrs = "";
-		proxyedApps = "";
+		proxiedApps = "";
 		isDNSProxy = false;
 		isPAC = false;
-	}
-
-	@Override
-	public String toString() {
-		return this.encodeJson().toJSONString();
-	}
-
-	@SuppressWarnings("unchecked")
-	public JSONObject encodeJson() {
-		JSONObject obj = new JSONObject();
-		obj.put("name", name);
-		obj.put("ssid", ssid);
-		obj.put("excludedSsid", excludedSsid);
-		obj.put("host", host);
-		obj.put("proxyType", proxyType);
-		obj.put("user", user);
-		obj.put("password", password);
-		obj.put("domain", domain);
-                obj.put("certificate", certificate);
-		obj.put("bypassAddrs", bypassAddrs);
-		obj.put("Proxyed", proxyedApps);
-
-		obj.put("isAuth", isAuth);
-		obj.put("isNTLM", isNTLM);
-		obj.put("isAutoConnect", isAutoConnect);
-		obj.put("isAutoSetProxy", isAutoSetProxy);
-		obj.put("isBypassApps", isBypassApps);
-		obj.put("isDNSProxy", isDNSProxy);
-		obj.put("isPAC", isPAC);
-
-		obj.put("port", port);
-		return obj;
-	}
-
-	class JSONDecoder {
-		private JSONObject obj;
-
-		public JSONDecoder(String values) throws ParseException {
-			JSONParser parser = new JSONParser();
-			obj = (JSONObject) parser.parse(values);
-		}
-
-		public String getString(String key, String def) {
-			Object tmp = obj.get(key);
-			if (tmp != null)
-				return (String) tmp;
-			else
-				return def;
-		}
-
-		public int getInt(String key, int def) {
-			Object tmp = obj.get(key);
-			if (tmp != null) {
-				try {
-					return Integer.valueOf(tmp.toString());
-				} catch (NumberFormatException e) {
-					return def;
-				}
-			} else {
-				return def;
-			}
-		}
-
-		public Boolean getBoolean(String key, Boolean def) {
-			Object tmp = obj.get(key);
-			if (tmp != null)
-				return (Boolean) tmp;
-			else
-				return def;
-		}
-	}
-
-	public void decodeJson(String values) {
-		JSONDecoder jd;
-
-		try {
-			jd = new JSONDecoder(values);
-		} catch (ParseException e) {
-			return;
-		}
-
-		name = jd.getString("name", "");
-		ssid = jd.getString("ssid", "");
-		excludedSsid = jd.getString("excludedSsid", "");
-		host = jd.getString("host", "");
-		proxyType = jd.getString("proxyType", "http");
-		user = jd.getString("user", "");
-		password = jd.getString("password", "");
-		domain = jd.getString("domain", "");
-                certificate = jd.getString("certificate", "");
-		bypassAddrs = jd.getString("bypassAddrs", "");
-		proxyedApps = jd.getString("Proxyed", "");
-
-		port = jd.getInt("port", 3128);
-
-		isAuth = jd.getBoolean("isAuth", false);
-		isNTLM = jd.getBoolean("isNTLM", false);
-		isAutoConnect = jd.getBoolean("isAutoConnect", false);
-		isAutoSetProxy = jd.getBoolean("isAutoSetProxy", false);
-		isBypassApps = jd.getBoolean("isBypassApps", false);
-		isDNSProxy = jd.getBoolean("isDNSProxy", false);
-		isPAC = jd.getBoolean("isPAC", false);
-
+		isAutoSetProxy = true;
 	}
 
 	public static String validateAddr(String ia) {
@@ -256,7 +146,7 @@ public class Profile implements Serializable {
 
 		} else {
 
-			String addrString = null;
+			String addrString;
 
 			try {
 				InetAddress addr = InetAddress.getByName(ia);
@@ -279,7 +169,7 @@ public class Profile implements Serializable {
 
 	public static String[] decodeAddrs(String addrs) {
 		String[] list = addrs.split("\\|");
-		Vector<String> ret = new Vector<String>();
+		ArrayList<String> ret = new ArrayList<>();
 		for (String addr : list) {
 			String ta = validateAddr(addr);
 			if (ta != null)
@@ -293,7 +183,7 @@ public class Profile implements Serializable {
 		if (addrs.length == 0)
 			return "";
 
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (String addr : addrs) {
 			String ta = validateAddr(addr);
 			if (ta != null)
@@ -311,8 +201,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param name
-	 *            the name to set
+	 * @param name the name to set
 	 */
 	public void setName(String name) {
 		this.name = name;
@@ -333,16 +222,14 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param ssid
-	 *            the ssid to set
+	 * @param ssid the ssid to set
 	 */
 	public void setSsid(String ssid) {
 		this.ssid = ssid;
 	}
 
 	/**
-	 * @param ssid
-	 *            the excluded ssid to set
+	 * @param ssid the excluded ssid to set
 	 */
 	public void setExcludedSsid(String ssid) {
 		this.excludedSsid = ssid;
@@ -356,8 +243,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param host
-	 *            the host to set
+	 * @param host the host to set
 	 */
 	public void setHost(String host) {
 		this.host = host;
@@ -371,8 +257,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param proxyType
-	 *            the proxyType to set
+	 * @param proxyType the proxyType to set
 	 */
 	public void setProxyType(String proxyType) {
 		this.proxyType = proxyType;
@@ -386,8 +271,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param port
-	 *            the port to set
+	 * @param port the port to set
 	 */
 	public void setPort(int port) {
 		this.port = port;
@@ -401,11 +285,18 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param bypassAddrs
-	 *            the bypassAddrs to set
+	 * @param bypassAddrs the bypassAddrs to set
 	 */
 	public void setBypassAddrs(String bypassAddrs) {
 		this.bypassAddrs = bypassAddrs;
+	}
+
+	public String getProxiedApps() {
+		return proxiedApps;
+	}
+
+	public void setProxiedApps(String proxiedApps) {
+		this.proxiedApps = proxiedApps;
 	}
 
 	/**
@@ -416,8 +307,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param user
-	 *            the user to set
+	 * @param user the user to set
 	 */
 	public void setUser(String user) {
 		this.user = user;
@@ -431,8 +321,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param password
-	 *            the password to set
+	 * @param password the password to set
 	 */
 	public void setPassword(String password) {
 		this.password = password;
@@ -446,8 +335,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param certificate
-	 *            the certificate to set
+	 * @param certificate the certificate to set
 	 */
 	public void setCertificate(String certificate) {
 		this.certificate = certificate;
@@ -461,8 +349,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param isAutoConnect
-	 *            the isAutoConnect to set
+	 * @param isAutoConnect the isAutoConnect to set
 	 */
 	public void setAutoConnect(Boolean isAutoConnect) {
 		this.isAutoConnect = isAutoConnect;
@@ -476,8 +363,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param isAutoSetProxy
-	 *            the isAutoSetProxy to set
+	 * @param isAutoSetProxy the isAutoSetProxy to set
 	 */
 	public void setAutoSetProxy(Boolean isAutoSetProxy) {
 		this.isAutoSetProxy = isAutoSetProxy;
@@ -491,8 +377,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param isBypassApps
-	 *            the isBypassApps to set
+	 * @param isBypassApps the isBypassApps to set
 	 */
 	public void setBypassApps(Boolean isBypassApps) {
 		this.isBypassApps = isBypassApps;
@@ -506,8 +391,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param isAuth
-	 *            the isAuth to set
+	 * @param isAuth the isAuth to set
 	 */
 	public void setAuth(Boolean isAuth) {
 		this.isAuth = isAuth;
@@ -521,8 +405,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param isNTLM
-	 *            the isNTLM to set
+	 * @param isNTLM the isNTLM to set
 	 */
 	public void setNTLM(Boolean isNTLM) {
 		this.isNTLM = isNTLM;
@@ -536,8 +419,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param domain
-	 *            the domain to set
+	 * @param domain the domain to set
 	 */
 	public void setDomain(String domain) {
 		this.domain = domain;
@@ -551,8 +433,7 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param isDNSProxy
-	 *            the isDNSProxy to set
+	 * @param isDNSProxy the isDNSProxy to set
 	 */
 	public void setDNSProxy(boolean isDNSProxy) {
 		this.isDNSProxy = isDNSProxy;
@@ -566,11 +447,58 @@ public class Profile implements Serializable {
 	}
 
 	/**
-	 * @param isDNSProxy
-	 *            the isDNSProxy to set
+	 * @param isPAC the isPAC to set
 	 */
 	public void setPAC(boolean isPAC) {
 		this.isPAC = isPAC;
+	}
+
+	public static Profile fromCursor(Cursor c) {
+		Profile p = new Profile();
+		p.name = c.getString(c.getColumnIndexOrThrow(Columns.PROFILE_NAME));
+		p.host = c.getString(c.getColumnIndexOrThrow(Columns.HOST));
+		p.proxyType = c.getString(c.getColumnIndexOrThrow(Columns.PROXY_TYPE));
+		p.port = c.getInt(c.getColumnIndexOrThrow(Columns.PORT));
+		p.bypassAddrs = c.getString(c.getColumnIndexOrThrow(Columns.BYPASS_ADDRS));
+		p.user = c.getString(c.getColumnIndexOrThrow(Columns.USER));
+		p.password = c.getString(c.getColumnIndexOrThrow(Columns.PASSWORD));
+		p.certificate = c.getString(c.getColumnIndexOrThrow(Columns.CERTIFICATE));
+		p.proxiedApps = c.getString(c.getColumnIndexOrThrow(Columns.PROXIED_APPS));
+		p.isAutoConnect = c.getInt(c.getColumnIndexOrThrow(Columns.IS_AUTO_CONNECT)) != 0;
+		p.isAutoSetProxy = c.getInt(c.getColumnIndexOrThrow(Columns.IS_AUTO_SET_PROXY)) != 0;
+		p.isBypassApps = c.getInt(c.getColumnIndexOrThrow(Columns.IS_BYPASS_APPS)) != 0;
+		p.isAuth = c.getInt(c.getColumnIndexOrThrow(Columns.IS_AUTH)) != 0;
+		p.isNTLM = c.getInt(c.getColumnIndexOrThrow(Columns.IS_NTLM)) != 0;
+		p.isDNSProxy = c.getInt(c.getColumnIndexOrThrow(Columns.IS_DNS_PROXY)) != 0;
+		p.isPAC = c.getInt(c.getColumnIndexOrThrow(Columns.IS_PAC)) != 0;
+		p.domain = c.getString(c.getColumnIndexOrThrow(Columns.DOMAIN));
+		p.ssid = c.getString(c.getColumnIndexOrThrow(Columns.SSID));
+		p.excludedSsid = c.getString(c.getColumnIndexOrThrow(Columns.EXCLUDED_SSID));
+		return p;
+	}
+
+	public ContentValues toContentValues() {
+		ContentValues cv = new ContentValues();
+		cv.put(Columns.PROFILE_NAME, name != null ? name : "");
+		cv.put(Columns.HOST, host != null ? host : "");
+		cv.put(Columns.PROXY_TYPE, proxyType != null ? proxyType : "http");
+		cv.put(Columns.PORT, port);
+		cv.put(Columns.BYPASS_ADDRS, bypassAddrs != null ? bypassAddrs : "");
+		cv.put(Columns.USER, user != null ? user : "");
+		cv.put(Columns.PASSWORD, password != null ? password : "");
+		cv.put(Columns.CERTIFICATE, certificate != null ? certificate : "");
+		cv.put(Columns.PROXIED_APPS, proxiedApps != null ? proxiedApps : "");
+		cv.put(Columns.IS_AUTH, isAuth ? 1 : 0);
+		cv.put(Columns.IS_NTLM, isNTLM ? 1 : 0);
+		cv.put(Columns.IS_AUTO_CONNECT, isAutoConnect ? 1 : 0);
+		cv.put(Columns.IS_AUTO_SET_PROXY, isAutoSetProxy ? 1 : 0);
+		cv.put(Columns.IS_BYPASS_APPS, isBypassApps ? 1 : 0);
+		cv.put(Columns.IS_PAC, isPAC ? 1 : 0);
+		cv.put(Columns.IS_DNS_PROXY, isDNSProxy ? 1 : 0);
+		cv.put(Columns.DOMAIN, domain != null ? domain : "");
+		cv.put(Columns.SSID, ssid != null ? ssid : "");
+		cv.put(Columns.EXCLUDED_SSID, excludedSsid != null ? excludedSsid : "");
+		return cv;
 	}
 
 }

@@ -2,7 +2,7 @@ package com.btr.proxy.selector.pac;
 
 /*****************************************************************************
  * Indicates an exception in the proxy framework.
- * 
+ *
  * @author Bernd Rosstauscher (proxyvole@rosstauscher.de) Copyright 2009
  ****************************************************************************/
 
@@ -20,7 +20,7 @@ public class ProxyException extends Exception {
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param message
 	 *            the error message
 	 * @param cause
@@ -33,7 +33,7 @@ public class ProxyException extends Exception {
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param message
 	 *            the error message
 	 ************************************************************************/
@@ -44,7 +44,7 @@ public class ProxyException extends Exception {
 
 	/*************************************************************************
 	 * Constructor
-	 * 
+	 *
 	 * @param cause
 	 *            the causing exception for chaining exceptions.
 	 ************************************************************************/

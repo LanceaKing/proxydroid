@@ -15,18 +15,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name">
 
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-9097031975646651~9376680322" />
-
-        <activity
-            android:name="com.google.android.gms.ads.AdActivity"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
-            android:theme="@android:style/Theme.Translucent" />
-
         <activity
             android:name="ProxyDroid"
-            android:label="@string/app_name">
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -34,26 +26,31 @@
         </activity>
         <activity
             android:name=".AppManager"
-            android:label="@string/app_name"
             android:theme="@style/Theme.AppCompat.Light" />
         <activity
             android:name=".BypassListActivity"
-            android:label="@string/app_name"
             android:theme="@style/Theme.AppCompat.Light" />
-        <activity
-            android:name=".FileChooser"
-            android:label="@string/app_name" />
+        <activity android:name=".FileChooser" />
 
         <service
             android:name=".ProxyDroidService"
             android:enabled="true" />
 
-        <receiver android:name=".ConnectivityBroadcastReceiver">
+        <provider
+            android:name=".ProxyDroidCLI"
+            android:authorities="org.proxydroid.cli"
+            android:exported="true" />
+
+        <receiver
+            android:name=".ConnectivityBroadcastReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".ProxyDroidWidgetProvider">
+        <receiver
+            android:name=".ProxyDroidWidgetProvider"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="org.proxydroid.ProxyDroidWidgetProvider.PROXY_SWITCH_ACTION" />

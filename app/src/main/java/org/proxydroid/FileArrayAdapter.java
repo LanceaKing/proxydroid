@@ -18,7 +18,7 @@ public class FileArrayAdapter extends ArrayAdapter<Option> {
 	private List<Option> items;
 
 	public FileArrayAdapter(Context context, int textViewResourceId,
-			List<Option> objects) {
+							List<Option> objects) {
 		super(context, textViewResourceId, objects);
 		c = context;
 		id = textViewResourceId;
