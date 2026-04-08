@@ -31,13 +31,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						+ Profile.Columns.USER + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.PASSWORD + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.CERTIFICATE + " TEXT NOT NULL DEFAULT '', "
-						+ Profile.Columns.IS_AUTH + " INTEGER NOT NULL DEFAULT 0, "
-						+ Profile.Columns.IS_NTLM + " INTEGER NOT NULL DEFAULT 0, "
-						+ Profile.Columns.IS_AUTO_CONNECT + " INTEGER NOT NULL DEFAULT 0, "
-						+ Profile.Columns.IS_AUTO_SET_PROXY + " INTEGER NOT NULL DEFAULT 1, "
-						+ Profile.Columns.IS_BYPASS_APPS + " INTEGER NOT NULL DEFAULT 0, "
-						+ Profile.Columns.IS_PAC + " INTEGER NOT NULL DEFAULT 0, "
-						+ Profile.Columns.IS_DNS_PROXY + " INTEGER NOT NULL DEFAULT 0, "
+						+ Profile.Columns.IS_AUTH + " BOOLEAN NOT NULL DEFAULT 0, "
+						+ Profile.Columns.IS_NTLM + " BOOLEAN NOT NULL DEFAULT 0, "
+						+ Profile.Columns.IS_AUTO_CONNECT + " BOOLEAN NOT NULL DEFAULT 0, "
+						+ Profile.Columns.IS_AUTO_SET_PROXY + " BOOLEAN NOT NULL DEFAULT 1, "
+						+ Profile.Columns.IS_BYPASS_APPS + " BOOLEAN NOT NULL DEFAULT 0, "
+						+ Profile.Columns.IS_PAC + " BOOLEAN NOT NULL DEFAULT 0, "
+						+ Profile.Columns.IS_DNS_PROXY + " BOOLEAN NOT NULL DEFAULT 0, "
 						+ Profile.Columns.DOMAIN + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.SSID + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.EXCLUDED_SSID + " TEXT NOT NULL DEFAULT ''"
@@ -66,7 +66,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		first.put(Profile.Columns.HOST, "");
 		first.put(Profile.Columns.PROXY_TYPE, "http");
 		first.put(Profile.Columns.PORT, 3128);
-		first.put(Profile.Columns.IS_AUTO_SET_PROXY, 1);
+		first.put(Profile.Columns.IS_AUTO_SET_PROXY, true);
 		db.insert(Profile.TABLE_NAME, null, first);
 	}
 }

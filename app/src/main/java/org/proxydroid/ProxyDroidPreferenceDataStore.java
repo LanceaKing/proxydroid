@@ -136,25 +136,25 @@ public class ProxyDroidPreferenceDataStore extends PreferenceDataStore {
 		ContentValues cv = new ContentValues();
 		switch (key) {
 			case Profile.Columns.IS_PAC:
-				cv.put(Profile.Columns.IS_PAC, value ? 1 : 0);
+				cv.put(Profile.Columns.IS_PAC, value);
 				break;
 			case Profile.Columns.IS_AUTH:
-				cv.put(Profile.Columns.IS_AUTH, value ? 1 : 0);
+				cv.put(Profile.Columns.IS_AUTH, value);
 				break;
 			case Profile.Columns.IS_NTLM:
-				cv.put(Profile.Columns.IS_NTLM, value ? 1 : 0);
+				cv.put(Profile.Columns.IS_NTLM, value);
 				break;
 			case Profile.Columns.IS_AUTO_CONNECT:
-				cv.put(Profile.Columns.IS_AUTO_CONNECT, value ? 1 : 0);
+				cv.put(Profile.Columns.IS_AUTO_CONNECT, value);
 				break;
 			case Profile.Columns.IS_AUTO_SET_PROXY:
-				cv.put(Profile.Columns.IS_AUTO_SET_PROXY, value ? 1 : 0);
+				cv.put(Profile.Columns.IS_AUTO_SET_PROXY, value);
 				break;
 			case Profile.Columns.IS_BYPASS_APPS:
-				cv.put(Profile.Columns.IS_BYPASS_APPS, value ? 1 : 0);
+				cv.put(Profile.Columns.IS_BYPASS_APPS, value);
 				break;
 			case Profile.Columns.IS_DNS_PROXY:
-				cv.put(Profile.Columns.IS_DNS_PROXY, value ? 1 : 0);
+				cv.put(Profile.Columns.IS_DNS_PROXY, value);
 				break;
 			default:
 				return;

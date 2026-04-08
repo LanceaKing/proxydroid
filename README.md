@@ -40,7 +40,7 @@ Ensure `ANDROID_HOME` (or `ANDROID_SDK_ROOT`) points at your SDK if you build ou
 
 The app exposes an exported `ContentProvider` (`org.proxydroid.cli`) so you can script profiles and start/stop the proxy from `adb` (or any tool that can talk to `content://` URIs). Package name: `org.proxydroid`.
 
-**Base URI:** `content://org.proxydroid.cli/profiles`  
+**Base URI:** `content://org.proxydroid.cli/profiles`
 **Single profile:** `content://org.proxydroid.cli/profiles/<id>` (numeric row id, same as `_id`)
 
 Because the provider is exported, any app or `adb` user on the device can read or change profiles and toggle the service. Use only on trusted devices.
@@ -76,7 +76,7 @@ adb shell content query --uri content://org.proxydroid.cli/profiles --projection
 
 ### Insert / update / delete
 
-`--bind` format: `column:TYPE:value` with `s` = string, `i` = integer (see `adb shell content help`).
+`--bind` format: `column:TYPE:value` with `s` = string, `i` = integer, `b` = boolean (see `adb shell content help`). Boolean profile columns accept `b:true` / `b:false` or `i:1` / `i:0`.
 
 Minimal insert example:
 
@@ -114,13 +114,13 @@ adb shell content delete --uri content://org.proxydroid.cli/profiles/1
 | `user` / `password` | text |                                            |
 | `certificate`    | text    |                                            |
 | `proxiedApps`    | text    |                                            |
-| `isAuth`         | integer | 0 or 1                                     |
-| `isNTLM`         | integer | 0 or 1                                     |
-| `isAutoConnect`  | integer | 0 or 1                                     |
-| `isAutoSetProxy` | integer | 0 or 1                                     |
-| `isBypassApps`   | integer | 0 or 1                                     |
-| `isPAC`          | integer | 0 or 1                                     |
-| `isDNSProxy`     | integer | 0 or 1                                     |
+| `isAuth`         | boolean | SQLite stores 0/1; bind as `b:` or `i:`    |
+| `isNTLM`         | boolean | same                                       |
+| `isAutoConnect`  | boolean | same                                       |
+| `isAutoSetProxy` | boolean | same                                       |
+| `isBypassApps`   | boolean | same                                       |
+| `isPAC`          | boolean | same                                       |
+| `isDNSProxy`     | boolean | same                                       |
 | `domain`         | text    |                                            |
 | `ssid`           | text    |                                            |
 | `excludedSsid`   | text    |                                            |
