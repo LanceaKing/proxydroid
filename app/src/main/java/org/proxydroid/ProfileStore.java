@@ -9,7 +9,9 @@ import android.net.Uri;
 public final class ProfileStore {
 	public static final String NEW_PROFILE_SENTINEL = "0";
 
-	/** Default stored value for {@link AppSettingsStore#KEY_ACTIVE_PROFILE} when unset (first install). */
+	/**
+	 * Default stored value for {@link AppSettingsStore#KEY_ACTIVE_PROFILE} when unset (first install).
+	 */
 	public static final String DEFAULT_ACTIVE_PROFILE_ID_STRING = "1";
 
 	private ProfileStore() {

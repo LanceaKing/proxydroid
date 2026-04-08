@@ -1,5 +1,7 @@
 package com.btr.proxy.selector.pac;
 
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -9,8 +11,6 @@ import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
-
-import android.util.Log;
 
 /*****************************************************************************
  * Script source that will load the content of a PAC file from an webserver. The

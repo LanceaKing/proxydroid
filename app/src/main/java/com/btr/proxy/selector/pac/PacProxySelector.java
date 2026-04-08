@@ -1,10 +1,10 @@
 package com.btr.proxy.selector.pac;
 
+import android.util.Log;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-
-import android.util.Log;
 
 /*****************************************************************************
  * ProxySelector that will use a PAC script to find an proxy for a given URI.

@@ -16,6 +16,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
 
+import androidx.preference.CheckBoxPreference;
+import androidx.preference.EditTextPreference;
+import androidx.preference.ListPreference;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreferenceCompat;
+
 import com.ksmaze.android.preference.ListPreferenceMultiSelect;
 
 import org.proxydroid.utils.Constraints;
@@ -24,13 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
-import androidx.preference.CheckBoxPreference;
-import androidx.preference.EditTextPreference;
-import androidx.preference.ListPreference;
-import androidx.preference.Preference;
-import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.SwitchPreferenceCompat;
 
 /**
  * Hosts the main settings hierarchy for {@link ProxyDroid}.

@@ -37,12 +37,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.proxydroid.utils.ImageLoader;
 import org.proxydroid.utils.ImageLoaderFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.ArrayList;
 
 public class AppManager extends AppCompatActivity implements OnCheckedChangeListener,
 		OnClickListener {

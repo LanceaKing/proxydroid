@@ -49,12 +49,12 @@ import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.net.Uri;
-import android.provider.Settings;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -80,7 +80,9 @@ import java.util.List;
 
 public class ProxyDroidService extends Service {
 
-	/** Channel id for foreground notification; sound/vibration are applied on the channel (Android 8+). */
+	/**
+	 * Channel id for foreground notification; sound/vibration are applied on the channel (Android 8+).
+	 */
 	private static final String NOTIFICATION_CHANNEL_ID = "org.proxydroid.fgs";
 
 	private NotificationManager notificationManager;
