@@ -113,6 +113,8 @@ public class ProxyDroidPreferenceDataStore extends PreferenceDataStore {
 				return p.getName() != null ? p.getName() : defValue;
 			case Profile.Columns.HOST:
 				return p.getHost() != null ? p.getHost() : defValue;
+			case Profile.Columns.PORT:
+				return String.valueOf(p.getPort());
 			case Profile.Columns.PROXY_TYPE:
 				return p.getProxyType() != null ? p.getProxyType() : defValue;
 			case Profile.Columns.USER:
