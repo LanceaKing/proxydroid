@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
+import android.text.TextUtils;
 
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.EditTextPreference;
@@ -324,7 +325,7 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 			bypassAddrs.setSummary(bypass.replace("|", ", "));
 		}
 		String portStr = String.valueOf(p.getPort());
-		if ("-1".equals(portStr) || portStr.isEmpty()) {
+		if ("-1".equals(portStr) || TextUtils.isEmpty(portStr)) {
 			portText.setSummary(ctx.getString(R.string.port_summary));
 		} else {
 			portText.setSummary(portStr);

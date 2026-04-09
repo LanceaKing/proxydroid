@@ -3,6 +3,8 @@ package org.proxydroid;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.text.TextUtils;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.preference.PreferenceDataStore;
@@ -58,6 +60,13 @@ public class ProxyDroidPreferenceDataStore extends PreferenceDataStore {
 				break;
 			case Profile.Columns.HOST:
 				cv.put(Profile.Columns.HOST, v);
+				break;
+			case Profile.Columns.PORT:
+				try {
+					cv.put(Profile.Columns.PORT, Integer.parseInt(v.trim()));
+				} catch (NumberFormatException ignored) {
+					Toast.makeText(appContext, R.string.number_alert, Toast.LENGTH_SHORT).show();
+				}
 				break;
 			case Profile.Columns.PROXY_TYPE:
 				cv.put(Profile.Columns.PROXY_TYPE, value != null ? value : "http");
