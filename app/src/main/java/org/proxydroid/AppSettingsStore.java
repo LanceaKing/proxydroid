@@ -26,6 +26,7 @@ public final class AppSettingsStore {
 	public static final String COLUMN_VALUE = "value";
 
 	public static final String KEY_ACTIVE_PROFILE = "activeProfile";
+	public static final String KEY_ENGINE_DESIRED = "engineDesiredEnabled";
 	public static final String KEY_IS_RUNNING = "isRunning";
 	public static final String KEY_IS_CONNECTING = "isConnecting";
 	public static final String KEY_RINGTONE = "ringtone";
@@ -36,6 +37,7 @@ public final class AppSettingsStore {
 	static {
 		HashSet<String> s = new HashSet<>();
 		s.add(KEY_ACTIVE_PROFILE);
+		s.add(KEY_ENGINE_DESIRED);
 		s.add(KEY_IS_CONNECTING);
 		s.add(KEY_IS_RUNNING);
 		s.add(KEY_LAST_SSID);

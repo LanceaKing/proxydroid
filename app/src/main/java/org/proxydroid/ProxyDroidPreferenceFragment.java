@@ -39,6 +39,8 @@ import java.util.Locale;
 public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 
 	private static final int REQUEST_NOTIFICATION_RINGTONE = 100;
+	private static final int REQUEST_CNTLM_FILE = 101;
+	private Preference cntlmConfig;
 
 	CheckBoxPreference isAutoConnectCheck;
 	CheckBoxPreference isAutoSetProxyCheck;
@@ -124,6 +126,16 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		passwordText = findPreference(Profile.Columns.PASSWORD);
 		domainText = findPreference(Profile.Columns.DOMAIN);
 		certificateText = findPreference(Profile.Columns.CERTIFICATE);
+		cntlmConfig = findPreference(Profile.Columns.CNTLM_CONFIG_PATH);
+		cntlmConfig.setOnPreferenceClickListener(pref -> {
+			new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+				.setTitle(R.string.cntlm_config)
+				.setItems(new String[]{getString(R.string.cntlm_choose_file), getString(R.string.cntlm_clear_file)}, (dialog, which) -> {
+					if (which == 0) startActivityForResult(new Intent(requireContext(), FileChooser.class), REQUEST_CNTLM_FILE);
+					else new ProxyDroidPreferenceDataStore(requireContext()).putString(Profile.Columns.CNTLM_CONFIG_PATH, "");
+				}).show();
+			return true;
+		});
 		bypassAddrs = findPreference(Profile.Columns.BYPASS_ADDRS);
 		ssidList = findPreference(Profile.Columns.SSID);
 		excludedSsidList = findPreference(Profile.Columns.EXCLUDED_SSID);
@@ -185,6 +197,11 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == REQUEST_CNTLM_FILE) {
+			if (resultCode == Activity.RESULT_OK && data != null)
+				new ProxyDroidPreferenceDataStore(requireContext()).putString(Profile.Columns.CNTLM_CONFIG_PATH, data.getStringExtra(Constraints.FILE_PATH));
+			return;
+		}
 		if (requestCode != REQUEST_NOTIFICATION_RINGTONE) {
 			return;
 		}
@@ -312,6 +329,8 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		} else {
 			userText.setSummary(user);
 		}
+		cntlmConfig.setSummary(p.getCntlmConfigPath() == null || p.getCntlmConfigPath().isEmpty()
+				? getString(R.string.cntlm_config_summary) : p.getCntlmConfigPath());
 		String cert = p.getCertificate() != null ? p.getCertificate() : "";
 		if (cert.isEmpty()) {
 			certificateText.setSummary(ctx.getString(R.string.certificate_summary));

@@ -17,6 +17,8 @@ public final class ProxyServiceHelper {
 		bundle.putString(Profile.Columns.PASSWORD, profile.getPassword());
 		bundle.putString(Profile.Columns.DOMAIN, profile.getDomain());
 		bundle.putString(Profile.Columns.CERTIFICATE, profile.getCertificate());
+		bundle.putString(Profile.Columns.CNTLM_CONFIG_PATH, profile.getCntlmConfigPath());
+		bundle.putString(Profile.Columns.PROXIED_APPS, profile.getProxiedApps());
 		bundle.putString(Profile.Columns.PROXY_TYPE, profile.getProxyType());
 		bundle.putBoolean(Profile.Columns.IS_AUTO_SET_PROXY, profile.isAutoSetProxy());
 		bundle.putBoolean(Profile.Columns.IS_BYPASS_APPS, profile.isBypassApps());
@@ -31,7 +33,7 @@ public final class ProxyServiceHelper {
 	public static boolean startProxyService(Context context, Profile profile) {
 		Intent it = new Intent(context, ProxyDroidService.class);
 		it.putExtras(buildStartExtras(profile));
-		return context.startService(it) != null;
+		return (android.os.Build.VERSION.SDK_INT >= 26 ? context.startForegroundService(it) : context.startService(it)) != null;
 	}
 
 	public static boolean stopProxyService(Context context) {

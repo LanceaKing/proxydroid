@@ -14,6 +14,13 @@ android {
         versionCode 72
         versionName "3.2.0"
 
+        externalNativeBuild {
+            cmake {
+                if (project.hasProperty('opensslArchive')) {
+                    arguments "-DPROXYDROID_OPENSSL_URL=${project.property('opensslArchive')}"
+                }
+            }
+        }
         ndk {
             // Specifies the ABI configurations of your native
             // libraries Gradle should build and package with your APK.
@@ -33,9 +40,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    buildFeatures {
+        aidl true
+    }
+
     externalNativeBuild {
         cmake {
-            version '3.10.2'
+            version '3.22.1'
             path "src/main/cpp/CMakeLists.txt"
         }
     }
@@ -48,6 +59,7 @@ configurations {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.github.topjohnwu.libsu:core:6.0.0'
+    implementation 'com.github.topjohnwu.libsu:service:6.0.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.preference:preference:1.1.0'
     implementation 'com.google.android.material:material:1.0.0'

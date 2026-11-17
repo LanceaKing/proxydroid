@@ -47,6 +47,7 @@ public class Profile implements Serializable {
 		public static final String DOMAIN = "domain";
 		public static final String PROXY_TYPE = "proxyType";
 		public static final String CERTIFICATE = "certificate";
+		public static final String CNTLM_CONFIG_PATH = "cntlmConfigPath";
 		public static final String IS_AUTO_CONNECT = "isAutoConnect";
 		public static final String IS_AUTO_SET_PROXY = "isAutoSetProxy";
 		public static final String IS_BYPASS_APPS = "isBypassApps";
@@ -65,6 +66,7 @@ public class Profile implements Serializable {
 				USER,
 				PASSWORD,
 				CERTIFICATE,
+				CNTLM_CONFIG_PATH,
 				PROXIED_APPS,
 				IS_AUTH,
 				IS_NTLM,
@@ -90,6 +92,7 @@ public class Profile implements Serializable {
 	private String user;
 	private String password;
 	private String certificate;
+	private String cntlmConfigPath;
 	private String proxiedApps;
 	private boolean isAutoConnect = false;
 	private boolean isAutoSetProxy = true;
@@ -115,6 +118,7 @@ public class Profile implements Serializable {
 		domain = "";
 		password = "";
 		certificate = "";
+		cntlmConfigPath = "";
 		isAuth = false;
 		proxyType = "http";
 		isAutoConnect = false;
@@ -449,6 +453,9 @@ public class Profile implements Serializable {
 		this.isPAC = isPAC;
 	}
 
+	public String getCntlmConfigPath() { return cntlmConfigPath; }
+	public void setCntlmConfigPath(String path) { cntlmConfigPath = path != null ? path : ""; }
+
 	public static Profile fromCursor(Cursor c) {
 		Profile p = new Profile();
 		p.name = c.getString(c.getColumnIndexOrThrow(Columns.PROFILE_NAME));
@@ -459,6 +466,7 @@ public class Profile implements Serializable {
 		p.user = c.getString(c.getColumnIndexOrThrow(Columns.USER));
 		p.password = c.getString(c.getColumnIndexOrThrow(Columns.PASSWORD));
 		p.certificate = c.getString(c.getColumnIndexOrThrow(Columns.CERTIFICATE));
+		p.cntlmConfigPath = c.getString(c.getColumnIndexOrThrow(Columns.CNTLM_CONFIG_PATH));
 		p.proxiedApps = c.getString(c.getColumnIndexOrThrow(Columns.PROXIED_APPS));
 		p.isAutoConnect = c.getInt(c.getColumnIndexOrThrow(Columns.IS_AUTO_CONNECT)) != 0;
 		p.isAutoSetProxy = c.getInt(c.getColumnIndexOrThrow(Columns.IS_AUTO_SET_PROXY)) != 0;
@@ -483,6 +491,7 @@ public class Profile implements Serializable {
 		cv.put(Columns.USER, user != null ? user : "");
 		cv.put(Columns.PASSWORD, password != null ? password : "");
 		cv.put(Columns.CERTIFICATE, certificate != null ? certificate : "");
+		cv.put(Columns.CNTLM_CONFIG_PATH, cntlmConfigPath != null ? cntlmConfigPath : "");
 		cv.put(Columns.PROXIED_APPS, proxiedApps != null ? proxiedApps : "");
 		cv.put(Columns.IS_AUTH, isAuth);
 		cv.put(Columns.IS_NTLM, isNTLM);

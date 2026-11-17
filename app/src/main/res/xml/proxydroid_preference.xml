@@ -98,6 +98,8 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/fearute_cat">
+        <Preference android:key="cntlmConfigPath" android:title="@string/cntlm_config"
+            android:summary="@string/cntlm_config_summary" />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="isAutoSetProxy"

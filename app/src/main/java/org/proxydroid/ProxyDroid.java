@@ -47,11 +47,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -69,11 +67,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.proxydroid.utils.Utils;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class ProxyDroid extends AppCompatActivity implements AppSettingsStore.Listener {
 
@@ -154,69 +147,6 @@ public class ProxyDroid extends AppCompatActivity implements AppSettingsStore.Li
 				.show();
 	}
 
-	private void copyAssets() {
-		AssetManager assetManager = getAssets();
-		String[] files = null;
-		String abi = null;
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-			abi = Build.SUPPORTED_ABIS[0];
-		} else {
-			abi = Build.CPU_ABI;
-		}
-		try {
-			if (abi.matches("armeabi-v7a|arm64-v8a"))
-				files = assetManager.list("armeabi-v7a");
-			else
-				files = assetManager.list("x86");
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage());
-		}
-		if (files != null) {
-			for (String file : files) {
-				if ("redsocks".equals(file)) {
-					continue;
-				}
-				InputStream in = null;
-				OutputStream out = null;
-				try {
-					if (abi.matches("armeabi-v7a|arm64-v8a"))
-						in = assetManager.open("armeabi-v7a/" + file);
-					else
-						in = assetManager.open("x86/" + file);
-					out = new FileOutputStream(getFilesDir().getAbsolutePath() + "/" + file);
-					copyFile(in, out);
-					in.close();
-					in = null;
-					out.flush();
-					out.close();
-					out = null;
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage());
-				}
-			}
-		}
-		NativeBinaryInstaller.ensureRedsocks(this);
-	}
-
-	private void copyFile(InputStream in, OutputStream out) throws IOException {
-		byte[] buffer = new byte[1024];
-		int read;
-		while ((read = in.read(buffer)) != -1) {
-			out.write(buffer, 0, read);
-		}
-	}
-
-	private boolean isTextEmpty(String s, String msg) {
-		if (s == null || s.length() <= 0) {
-			showAToast(msg);
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Called when the activity is first created.
-	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -629,23 +559,6 @@ public class ProxyDroid extends AppCompatActivity implements AppSettingsStore.Li
 		} catch (Exception e) {
 			// Nothing
 		}
-
-		copyAssets();
-
-		String filePath = getFilesDir().getAbsolutePath();
-
-		Utils.runRootCommand(Utils.getIptables()
-				+ " -t nat -F OUTPUT\n"
-				+ getFilesDir().getAbsolutePath()
-				+ "/proxy.sh stop\n"
-				+ "kill -9 `cat " + filePath + "cntlm.pid`\n");
-
-		Utils.runRootCommand(
-				"chmod 700 " + filePath + "/redsocks\n"
-						+ "chmod 700 " + filePath + "/proxy.sh\n"
-						+ "chmod 700 " + filePath + "/gost.sh\n"
-						+ "chmod 700 " + filePath + "/cntlm\n"
-						+ "chmod 700 " + filePath + "/gost\n");
 	}
 
 	@Override

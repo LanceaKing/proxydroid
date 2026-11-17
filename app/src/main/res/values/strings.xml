@@ -189,4 +189,10 @@
     <string name="msg_pac_error">Incorrect or unsupported PAC file</string>
     <string name="msg_resolve_error">Incorrect or unknown proxy host name</string>
 
+    <string name="cntlm_config">Advanced cntlm.conf</string>
+    <string name="cntlm_config_summary">Optional compatible configuration file; supplied values take priority</string>
+    <string name="cntlm_choose_file">Choose configuration file</string>
+    <string name="cntlm_clear_file">Use profile settings</string>
+    <string name="engine_connecting">Starting proxy engine…</string>
+    <string name="engine_disconnected">Proxy engine disconnected</string>
 </resources>

@@ -15,7 +15,7 @@ here is a list of them:
 
 * **JDK** 17 (Android Gradle Plugin requirement; source language level is Java 8)
 * **Android SDK** with API **29** (compile and target SDK)
-* **Android NDK** and **CMake** 3.10.2+ (native code is built via `externalNativeBuild`)
+* **Android NDK** 25.1.8937393 and **CMake** 3.22.1 (native code is built via `externalNativeBuild`)
 * **Android Studio** or a standalone Gradle install (Android Gradle Plugin **8.1.4**)
 
 Minimum supported Android version: **API 19** (Android 4.4).
@@ -26,7 +26,6 @@ From the repository root:
 
 ```bash
 git submodule update --init --recursive
-scripts/build-redsocks-assets.sh
 ./gradlew assembleDebug
 ```
 
@@ -38,42 +37,49 @@ Release APK:
 
 Ensure `ANDROID_HOME` (or `ANDROID_SDK_ROOT`) points at your SDK if you build outside Android Studio.
 
-### redsocks fork and executable assets
+### Shared redsocks engine
 
-`app/src/main/cpp/redsocks` is a submodule of
-[LanceaKing/redsocks](https://github.com/LanceaKing/redsocks/tree/master),
-pinned to the tested SNI fix on the fork's `master`. The fork is based on
-`darkk/redsocks`; run its complete suite before updating the submodule pin.
-Clone with `git clone --recurse-submodules` or initialize it with the command above.
+`app/src/main/cpp/redsocks` tracks the `feat/redsocks-upstream-tls` branch of
+`LanceaKing/redsocks`. Its root-level `cntlm/` submodule tracks the patched
+`feat/redsocks-embedded` branch of `LanceaKing/cntlm`, based on
+`versat/cntlm` master `678d30b8ab4b0b2e3fb89a43bbeedd42d385e5f7`
+(checked 2026-11-17, version 0.94.1). Both dependencies are pinned by Git commit;
+use recursive submodule initialization when cloning or updating.
 
-Run `scripts/build-redsocks-assets.sh` after changing the submodule. It uses NDK
-`25.1.8937393` and SDK CMake `3.10.2.4988404` by default (override with
-`REDSOCKS_NDK_VERSION` / `REDSOCKS_CMAKE_VERSION`). It builds ARMv7, ARM64, x86,
-and x86_64, strips and refreshes the ARMv7/x86 assets used by the app, and writes
-their commit and SHA-256 to `assets/redsocks-build.json`. Then build the APK.
-An ordinary Gradle native build alone does not refresh these executable assets.
+Gradle builds and packages `libredsocks.so` for ARMv7, ARM64, x86 and x86_64.
+The App binds an ordinary libsu RootService, which calls the shared engine
+through JNI. HTTPS profiles connect directly from redsocks to the upstream
+proxy using TLS 1.2 or newer, SNI and system trust anchors with hostname/IP
+verification. TLS connections use buffered I/O. The target site's original TLS
+stream remains intact. CONNECT still uses visible target SNI when available.
 
-Before each service start, including the ContentProvider CLI, the app compares
-the bundled and extracted redsocks hashes. Changed or missing executables are
-replaced using a temporary file and atomic rename. Deployment failure stops
-startup. Existing profiles and credentials need no migration.
+NTLM uses cntlm's HTTP/CONNECT, authentication, connection cache, NoProxy,
+ACL, additional Listen/SOCKS5/Tunnel ports, NTLMToBasic and ISA scanner modules
+inside the same library and upstream connection. An optional `cntlmConfigPath`
+profile setting selects an existing cntlm configuration file readable by the
+App. Missing Proxy/Username/Domain/Password values fall back to profile values;
+supplied hashes suppress fallback password injection. Process controls such as
+PidFile/User/daemonization are rejected in the bound host. Platform-specific
+GSS/Kerberos and Windows SSPI are outside the Android embedded target.
 
-HTTP CONNECT automatically uses visible TLS SNI with the original port. The
-original TLS bytes are preserved, and Basic/Digest authentication keeps the same
-target across 407 retries. Missing/invalid SNI, non-TLS traffic, a 64 KiB limit,
-or a one-second deadline fall back to IP CONNECT through the configured proxy.
-An upstream that rejects IP CONNECT will still reject that fallback. ECH's hidden
-inner hostname and QUIC/UDP are outside this TCP fix. This change does not add an
-upstream startup health check; the running indicator is not an end-to-end probe.
+The root host installs its owned `PDROID_OUT` chain after listeners are ready,
+removes its tagged OUTPUT jump before stopping, and marks its outbound sockets
+to prevent loops. No executable redsocks/cntlm/gost asset refresh is needed.
+System trust anchors are exported through a private descriptor; the profile's
+existing `certificate` setting is not used as an upstream CA override.
 
-The fork's `All tests` GitHub Actions workflow runs the original upstream tests,
-CONNECT regressions and C parser checks through the same pytest framework and
-`tests/run` entry point, in one test step per compiler. It uses native Ubuntu
-24.04 with GCC, Clang, ASan and UBSan; Docker is not required. Full local test
-commands and dependencies are in the submodule README.
-
-Build, CI and selected-app acceptance evidence is recorded in
-[the validation notes](docs/http-connect-sni-validation.md).
+OpenSSL 3.5.9 is built from its pinned source archive as a static PIC dependency.
+For an offline build, provide the same verified archive with
+`-PopensslArchive=file:///absolute/path/openssl-3.5.9.tar.gz`.
+Native embedding and runnable CLI examples are in
+[the engine guide](app/src/main/cpp/redsocks/docs/embedding.md).
+After building, run `python3 scripts/verify-native-engine.py --output app/build/reports/native-engine.json`
+to verify all four APK libraries, JNI exports, Android API levels, alignment and
+system-only dynamic dependencies. The JSON records library hashes and each
+repository's commit and working-tree digest; it identifies uncommitted builds.
+Build and loopback protocol checks are separate from Android device acceptance;
+[the older SNI validation notes](docs/http-connect-sni-validation.md) describe
+an earlier executable build.
 
 ## ADB shell content (automation / CLI)
 
@@ -151,7 +157,8 @@ adb shell content delete --uri content://org.proxydroid.cli/profiles/1
 | `proxyType`      | text    | e.g. `http` (default in schema)            |
 | `bypassAddrs`    | text    |                                            |
 | `user` / `password` | text |                                            |
-| `certificate`    | text    |                                            |
+| `certificate`    | text    | Existing client certificate setting        |
+| `cntlmConfigPath` | text    | Optional App-readable cntlm config file    |
 | `proxiedApps`    | text    |                                            |
 | `isAuth`         | boolean | SQLite stores 0/1; bind as `b:` or `i:`    |
 | `isNTLM`         | boolean | same                                       |

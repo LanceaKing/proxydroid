@@ -3,7 +3,6 @@ package org.proxydroid;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
-import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -80,6 +79,9 @@ public class ProxyDroidPreferenceDataStore extends PreferenceDataStore {
 			case Profile.Columns.DOMAIN:
 				cv.put(Profile.Columns.DOMAIN, v);
 				break;
+			case Profile.Columns.CNTLM_CONFIG_PATH:
+				cv.put(Profile.Columns.CNTLM_CONFIG_PATH, v);
+				break;
 			case Profile.Columns.CERTIFICATE:
 				cv.put(Profile.Columns.CERTIFICATE, v);
 				break;
@@ -123,6 +125,8 @@ public class ProxyDroidPreferenceDataStore extends PreferenceDataStore {
 				return p.getPassword() != null ? p.getPassword() : defValue;
 			case Profile.Columns.DOMAIN:
 				return p.getDomain() != null ? p.getDomain() : defValue;
+			case Profile.Columns.CNTLM_CONFIG_PATH:
+				return p.getCntlmConfigPath();
 			case Profile.Columns.CERTIFICATE:
 				return p.getCertificate() != null ? p.getCertificate() : defValue;
 			case Profile.Columns.SSID:

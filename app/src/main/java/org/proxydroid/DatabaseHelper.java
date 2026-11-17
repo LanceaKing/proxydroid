@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
 	private static final String DATABASE_NAME = "profiles.db";
-	private static final int DATABASE_VERSION = 1;
+	private static final int DATABASE_VERSION = 2;
 
 	private final Context appContext;
 
@@ -30,6 +30,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						+ Profile.Columns.PROXIED_APPS + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.USER + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.PASSWORD + " TEXT NOT NULL DEFAULT '', "
+						+ Profile.Columns.CNTLM_CONFIG_PATH + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.CERTIFICATE + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.IS_AUTH + " BOOLEAN NOT NULL DEFAULT 0, "
 						+ Profile.Columns.IS_NTLM + " BOOLEAN NOT NULL DEFAULT 0, "
@@ -55,9 +56,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		db.execSQL("DROP TABLE IF EXISTS " + Profile.TABLE_NAME);
-		db.execSQL("DROP TABLE IF EXISTS " + AppSettingsStore.TABLE_NAME);
-		onCreate(db);
+		if (oldVersion < 2) {
+			db.execSQL("ALTER TABLE " + Profile.TABLE_NAME + " ADD COLUMN "
+					+ Profile.Columns.CNTLM_CONFIG_PATH + " TEXT NOT NULL DEFAULT ''");
+		}
 	}
 
 	private void insertDefaultProfiles(SQLiteDatabase db) {

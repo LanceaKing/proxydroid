@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.4.1)
-
+cmake_minimum_required(VERSION 3.22.1)
+project(proxydroid C)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+include(openssl.cmake)
 add_subdirectory(libevent)
 add_subdirectory(redsocks)

@@ -46,6 +46,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -54,6 +55,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -65,18 +67,22 @@ import com.btr.proxy.selector.pac.PacProxySelector;
 import com.btr.proxy.selector.pac.PacScriptSource;
 import com.btr.proxy.selector.pac.Proxy;
 import com.btr.proxy.selector.pac.UrlPacScriptSource;
+import com.topjohnwu.superuser.ipc.RootService;
 
+import org.proxydroid.engine.EngineConfig;
+import org.proxydroid.engine.EngineRootService;
+import org.proxydroid.engine.IEngineCallback;
+import org.proxydroid.engine.IRootEngine;
 import org.proxydroid.utils.Utils;
 
 import java.lang.ref.WeakReference;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ProxyDroidService extends Service {
 
@@ -109,50 +115,13 @@ public class ProxyDroidService extends Service {
 	private static final int MSG_CONNECT_PAC_ERROR = 4;
 	private static final int MSG_CONNECT_RESOLVE_ERROR = 5;
 
-	final static String CMD_IPTABLES_RETURN = "iptables -t nat -A OUTPUT -p tcp -d 0.0.0.0 -j RETURN\n";
-
-	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP = "iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to 8123\n"
-			+ "iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to 8124\n"
-			+ "iptables -t nat -A OUTPUT -p tcp --dport 5228 -j REDIRECT --to 8124\n";
-
-	final static String CMD_IPTABLES_DNAT_ADD_HTTP = "iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:8124\n"
-			+ "iptables -t nat -A OUTPUT -p tcp --dport 5228 -j DNAT --to-destination 127.0.0.1:8124\n";
-
-	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP_TUNNEL = "iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to 8123\n"
-			+ "iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to 8123\n"
-			+ "iptables -t nat -A OUTPUT -p tcp --dport 5228 -j REDIRECT --to 8123\n";
-
-	final static String CMD_IPTABLES_DNAT_ADD_HTTP_TUNNEL = "iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "iptables -t nat -A OUTPUT -p tcp --dport 5228 -j DNAT --to-destination 127.0.0.1:8123\n";
-
-	final static String CMD_IPTABLES_REDIRECT_ADD_SOCKS = "iptables -t nat -A OUTPUT -p tcp -j REDIRECT --to 8123\n";
-
-	final static String CMD_IPTABLES_DNAT_ADD_SOCKS = "iptables -t nat -A OUTPUT -p tcp -j DNAT --to-destination 127.0.0.1:8123\n";
-
 	private static final String TAG = "ProxyDroidService";
 
 	private String host;
 	private String hostName;
 	private int port;
-	private String bypassAddrs = "";
-	private String user;
-	private String password;
-	private String domain;
 	private String proxyType = "http";
-	private String auth = "false";
-	private boolean isAuth = false;
-	private boolean isNTLM = false;
 	private boolean isPAC = false;
-
-	public String basePath = "/data/data/org.proxydroid/";
-
-	private boolean hasRedirectSupport = true;
-	private boolean isAutoSetProxy = false;
-	private boolean isBypassApps = false;
-
-	private ProxiedApp[] apps;
 
 	/*
 	 * This is a hack see
@@ -179,130 +148,6 @@ public class ProxyDroidService extends Service {
 
 	private void markServiceStopped() {
 		sRunningInstance = null;
-	}
-
-	/**
-	 * Internal method to request actual PTY terminal once we've finished
-	 * authentication. If called before authenticated, it will just fail.
-	 */
-	private void enableProxy() {
-
-		String proxyHost = host;
-		int proxyPort = port;
-
-		try {
-			if ("https".equals(proxyType)) {
-				String src = "-L=http://127.0.0.1:8126";
-				String auth = "";
-				if (!user.isEmpty() && !password.isEmpty()) {
-					auth = user + ":" + password + "@";
-				}
-				String dst = "-F=https://" + auth + hostName + ":" + port + "?ip=" + host;
-
-				// Start gost here
-				Utils.runRootCommand(basePath + "gost.sh " + basePath + " " + src + " " + dst);
-
-				// Reset host / port
-				proxyHost = "127.0.0.1";
-				proxyPort = 8126;
-				proxyType = "http";
-			}
-
-			if (proxyType.equals("http") && isAuth && isNTLM) {
-				Utils.runRootCommand(basePath + "proxy.sh " + basePath + " start http 127.0.0.1 8025 false\n"
-						+ basePath + "cntlm -P " + basePath + "cntlm.pid -l 8025 -u " + user
-						+ (!domain.equals("") ? "@" + domain : "@local") + " -p " + password + " "
-						+ proxyHost + ":" + proxyPort + "\n");
-			} else {
-				final String u = Utils.preserve(user);
-				final String p = Utils.preserve(password);
-
-				Utils.runRootCommand(basePath + "proxy.sh " + basePath + " start" + " " + proxyType + " " + proxyHost
-						+ " " + proxyPort + " " + auth + " \"" + u + "\" \"" + p + "\"");
-			}
-
-			StringBuilder cmd = new StringBuilder();
-
-			cmd.append(CMD_IPTABLES_RETURN.replace("0.0.0.0", host));
-
-			if (bypassAddrs != null && !bypassAddrs.equals("")) {
-				String[] addrs = Profile.decodeAddrs(bypassAddrs);
-				for (String addr : addrs)
-					cmd.append(CMD_IPTABLES_RETURN.replace("0.0.0.0", addr));
-			}
-
-			String redirectCmd = CMD_IPTABLES_REDIRECT_ADD_HTTP;
-			String dnatCmd = CMD_IPTABLES_DNAT_ADD_HTTP;
-
-			if (proxyType.equals("socks4") || proxyType.equals("socks5")) {
-				redirectCmd = CMD_IPTABLES_REDIRECT_ADD_SOCKS;
-				dnatCmd = CMD_IPTABLES_DNAT_ADD_SOCKS;
-			} else if (proxyType.equals("http-tunnel")) {
-				redirectCmd = CMD_IPTABLES_REDIRECT_ADD_HTTP_TUNNEL;
-				dnatCmd = CMD_IPTABLES_DNAT_ADD_HTTP_TUNNEL;
-			}
-
-			if (isBypassApps) {
-				// for host specified apps
-				if (apps == null || apps.length <= 0)
-					apps = AppManager.getProxiedApps(this, false);
-
-				for (ProxiedApp app : apps) {
-					if (app != null && app.isProxied()) {
-						cmd.append(CMD_IPTABLES_RETURN.replace("-d 0.0.0.0", "").replace("-t nat",
-								"-t nat -m owner --uid-owner " + app.getUid()));
-					}
-				}
-
-			}
-
-			if (isAutoSetProxy || isBypassApps) {
-				cmd.append(hasRedirectSupport ? redirectCmd : dnatCmd);
-			} else {
-				// for host specified apps
-				if (apps == null || apps.length <= 0)
-					apps = AppManager.getProxiedApps(this, true);
-
-				for (ProxiedApp app : apps) {
-					if (app != null && app.isProxied()) {
-						cmd.append((hasRedirectSupport ? redirectCmd : dnatCmd).replace("-t nat",
-								"-t nat -m owner --uid-owner " + app.getUid()));
-					}
-				}
-			}
-
-			String rules = cmd.toString();
-
-			rules = rules.replace("iptables", Utils.getIptables());
-
-			Utils.runRootCommand(rules);
-
-		} catch (Exception e) {
-			Log.e(TAG, "Error setting up port forward during connect", e);
-		}
-
-	}
-
-	/**
-	 * Called when the activity is first created.
-	 */
-	public boolean handleCommand() {
-		if (!NativeBinaryInstaller.ensureRedsocks(this)) {
-			return false;
-		}
-
-		String filePath = getFilesDir().getAbsolutePath();
-
-		Utils.runRootCommand(
-				"chmod 700 " + filePath + "/redsocks\n"
-						+ "chmod 700 " + filePath + "/proxy.sh\n"
-						+ "chmod 700 " + filePath + "/gost.sh\n"
-						+ "chmod 700 " + filePath + "/cntlm\n"
-						+ "chmod 700 " + filePath + "/gost\n");
-
-		enableProxy();
-
-		return true;
 	}
 
 	/**
@@ -408,8 +253,6 @@ public class ProxyDroidService extends Service {
 	public void onCreate() {
 		super.onCreate();
 
-		basePath = getFilesDir().getAbsolutePath() + "/";
-
 		ProfileStore.ensureInitialized(this);
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		syncNotificationChannel();
@@ -425,6 +268,8 @@ public class ProxyDroidService extends Service {
 	 */
 	@Override
 	public void onDestroy() {
+		desired = false; destroyed = true; ++generation;
+		AppSettingsStore.putBoolean(this, AppSettingsStore.KEY_ENGINE_DESIRED, false);
 
 		AppSettingsStore.unregisterListener(mAppSettingsListener);
 		mLastNotifyTitle = null;
@@ -457,28 +302,20 @@ public class ProxyDroidService extends Service {
 	}
 
 	private void onDisconnect() {
-
-		final StringBuilder sb = new StringBuilder();
-
-		sb.append(Utils.getIptables()).append(" -t nat -F OUTPUT\n");
-
-		if ("https".equals(proxyType)) {
-			sb.append("kill -9 `cat " + basePath + "gost.pid`\n");
-		}
-
-		if (isAuth && isNTLM) {
-			sb.append("kill -9 `cat " + basePath + "cntlm.pid`\n");
-		}
-
-		sb.append(basePath + "proxy.sh " + basePath + " stop\n");
-
-		new Thread() {
-			@Override
-			public void run() {
-				Utils.runRootCommand(sb.toString());
-			}
-		}.start();
-
+		final IRootEngine old = rootEngine;
+		control.execute(() -> {
+			try {
+				if (old != null) {
+					old.unregisterCallback(callback);
+					old.stop();
+					if (old.getStatus() == 2) {
+						EngineRootService.cleanupDisconnectedHost();
+						old.stop();
+					}
+				} else EngineRootService.cleanupDisconnectedHost();
+			} catch (RemoteException e) { EngineRootService.cleanupDisconnectedHost(); }
+			finally { handler.post(() -> { rootEngine = null; unbindRoot(); }); }
+		});
 	}
 
 	final Handler handler = new Handler() {
@@ -511,26 +348,6 @@ public class ProxyDroidService extends Service {
 			super.handleMessage(msg);
 		}
 	};
-
-	// Local Ip address
-	public String getLocalIpAddress() {
-		try {
-			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en
-					.hasMoreElements(); ) {
-				NetworkInterface intf = en.nextElement();
-				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr
-						.hasMoreElements(); ) {
-					InetAddress inetAddress = enumIpAddr.nextElement();
-					if (!inetAddress.isLoopbackAddress()) {
-						return inetAddress.getHostAddress();
-					}
-				}
-			}
-		} catch (SocketException ex) {
-			Log.e(TAG, ex.toString());
-		}
-		return null;
-	}
 
 	private boolean getAddress() {
 
@@ -603,73 +420,132 @@ public class ProxyDroidService extends Service {
 		}
 	}
 
+	// Keep stop/cleanup ordered before a replacement Service instance starts.
+	private static final ExecutorService control = Executors.newSingleThreadExecutor();
+	private volatile IRootEngine rootEngine;
+	private volatile boolean desired, destroyed;
+	private boolean binding, bound;
+	private boolean nativeReady;
+	private volatile int generation;
+	private int rebinds;
+	private Bundle pendingProfile;
+	private final IEngineCallback callback = new IEngineCallback.Stub() {
+		@Override public void onStateChanged(int state, String diagnostic) {
+			if (state == 4) handler.post(() -> {
+				if (desired && !destroyed && nativeReady) {
+					nativeReady = false;
+					connectionFailed(diagnostic == null || diagnostic.isEmpty() ? "Native engine stopped unexpectedly" : diagnostic);
+				}
+			});
+		}
+	};
+	private final ServiceConnection connection = new ServiceConnection() {
+		@Override public void onServiceConnected(ComponentName name, IBinder service) {
+			binding = false; bound = true;
+			if (!desired || destroyed) { unbindRoot(); return; }
+			rootEngine = IRootEngine.Stub.asInterface(service);
+			try { service.linkToDeath(() -> handler.post(ProxyDroidService.this::hostDied), 0); }
+			catch (RemoteException e) { hostDied(); return; }
+			startNative(generation, new Bundle(pendingProfile), rootEngine);
+		}
+		@Override public void onServiceDisconnected(ComponentName name) { hostDied(); }
+		@Override public void onBindingDied(ComponentName name) { hostDied(); }
+		@Override public void onNullBinding(ComponentName name) { connectionFailed("Root host returned no Binder"); }
+	};
+	private void bindRoot() {
+		if (binding || bound || destroyed || !desired) return;
+		binding = true;
+		try { RootService.bind(new Intent(this, EngineRootService.class), connection); }
+		catch (RuntimeException e) { binding = false; connectionFailed("Unable to bind root engine"); return; }
+		final int token = generation;
+		handler.postDelayed(() -> {
+			if (binding && desired && token == generation) connectionFailed("Root engine startup timed out");
+		}, 20000);
+	}
+	private void unbindRoot() {
+		if (bound || binding) {
+			RootService.unbind(connection);
+			bound = binding = false;
+		}
+	}
+	private void hostDied() {
+		if (destroyed || rootEngine == null && !binding && !bound) return;
+		rootEngine = null;
+		nativeReady = false;
+		unbindRoot();
+		AppSettingsStore.putBoolean(this, AppSettingsStore.KEY_IS_RUNNING, false);
+		updateWidgetToggle(false);
+		if (desired) notifyAlert(getString(R.string.engine_disconnected), getString(R.string.engine_disconnected));
+		control.execute(() -> {
+			EngineRootService.cleanupDisconnectedHost();
+			handler.post(() -> {
+				if (destroyed || !desired) return;
+				if (rebinds++ == 0) bindRoot();
+				else connectionFailed("Root engine disconnected again");
+			});
+		});
+	}
+	private void connectionFailed(String message) {
+		if (destroyed) return;
+		Log.e(TAG, message);
+		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+		handler.sendEmptyMessage(MSG_CONNECT_FAIL);
+		handler.sendEmptyMessage(MSG_CONNECT_FINISH);
+		stopSelf();
+	}
+
 	/**
 	 * Keys must match {@link ProxyServiceHelper#buildStartExtras(Profile)} ({@link Profile.Columns}).
 	 * {@link Profile.Columns#CERTIFICATE} and {@link Profile.Columns#IS_DNS_PROXY} are passed in extras but not yet applied here.
 	 */
+	private void startNative(int token, Bundle profile, IRootEngine remote) {
+		nativeReady = false;
+		control.execute(() -> {
+			if (!desired || destroyed || token != generation) return;
+			try {
+				host = profile.getString(Profile.Columns.HOST, "");
+				port = profile.getInt(Profile.Columns.PORT);
+				proxyType = profile.getString(Profile.Columns.PROXY_TYPE, "http");
+				isPAC = profile.getBoolean(Profile.Columns.IS_PAC);
+				if (!getAddress()) throw new java.io.IOException("Unable to resolve proxy/PAC address");
+				profile.putString(Profile.Columns.PROXY_TYPE, proxyType);
+				try (EngineConfig config = EngineConfig.prepare(this, profile, hostName, host, port)) {
+					if (!desired || destroyed || token != generation) return;
+					remote.registerCallback(callback);
+					if (remote.start(config.rules, config.config, config.trust, config.cntlm) != 0)
+						throw new java.io.IOException(remote.getDiagnostics());
+				}
+				handler.post(() -> {
+					if (!desired || destroyed || token != generation) return;
+					nativeReady = true;
+					notifyAlert(getString(R.string.forward_success) + " | " + getProfileName(), getString(R.string.service_running));
+					handler.sendEmptyMessage(MSG_CONNECT_SUCCESS);
+					handler.sendEmptyMessage(MSG_CONNECT_FINISH);
+					updateWidgetToggle(true);
+				});
+			} catch (Exception e) {
+				final String message = e instanceof java.io.IOException && e.getMessage() != null
+					? e.getMessage() : "Proxy engine startup failed";
+				handler.post(() -> { if (desired && !destroyed && token == generation) connectionFailed(message); });
+			}
+		});
+	}
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (intent == null || intent.getExtras() == null) {
-			return START_STICKY;
-		}
-
-		Log.d(TAG, "Service Start");
-
-		Bundle bundle = intent.getExtras();
-		host = bundle.getString(Profile.Columns.HOST);
-		bypassAddrs = bundle.getString(Profile.Columns.BYPASS_ADDRS);
-		proxyType = bundle.getString(Profile.Columns.PROXY_TYPE);
-		port = bundle.getInt(Profile.Columns.PORT);
-		isAutoSetProxy = bundle.getBoolean(Profile.Columns.IS_AUTO_SET_PROXY);
-		isBypassApps = bundle.getBoolean(Profile.Columns.IS_BYPASS_APPS);
-		isAuth = bundle.getBoolean(Profile.Columns.IS_AUTH);
-		isNTLM = bundle.getBoolean(Profile.Columns.IS_NTLM);
-		isPAC = bundle.getBoolean(Profile.Columns.IS_PAC);
-
-		if (isAuth) {
-			auth = "true";
-			user = bundle.getString(Profile.Columns.USER);
-			password = bundle.getString(Profile.Columns.PASSWORD);
-		} else {
-			auth = "false";
-			user = "";
-			password = "";
-		}
-
-		if (isNTLM) {
-			domain = bundle.getString(Profile.Columns.DOMAIN);
-		} else {
-			domain = "";
-		}
-
-		new Thread(() -> {
-
-			handler.sendEmptyMessage(MSG_CONNECT_START);
-
-			hasRedirectSupport = Utils.getHasRedirectSupport();
-
-			if (getAddress() && handleCommand()) {
-				// Connection and forward successful
-				notifyAlert(getString(R.string.forward_success) + " | " + getProfileName(),
-						getString(R.string.service_running));
-
-				handler.sendEmptyMessage(MSG_CONNECT_SUCCESS);
-
-				updateWidgetToggle(true);
-
-			} else {
-				// Connection or forward unsuccessful
-
-				stopSelf();
-				handler.sendEmptyMessage(MSG_CONNECT_FAIL);
-			}
-
-			handler.sendEmptyMessage(MSG_CONNECT_FINISH);
-
-		}).start();
-
+			if (!AppSettingsStore.getBoolean(this, AppSettingsStore.KEY_ENGINE_DESIRED, false)) { stopSelf(); return START_NOT_STICKY; }
+			Profile active = ProfileStore.loadActiveProfile(this);
+			if (active == null) { stopSelf(); return START_NOT_STICKY; }
+			pendingProfile = ProxyServiceHelper.buildStartExtras(active);
+		} else pendingProfile = new Bundle(intent.getExtras());
+		desired = true;
+		AppSettingsStore.putBoolean(this, AppSettingsStore.KEY_ENGINE_DESIRED, true);
+		++generation; rebinds = 0;
+		handler.sendEmptyMessage(MSG_CONNECT_START);
+		notifyAlert(getString(R.string.engine_connecting), getString(R.string.engine_connecting));
 		markServiceStarted();
+		if (rootEngine != null) startNative(generation, new Bundle(pendingProfile), rootEngine);
+		else bindRoot();
 		return START_STICKY;
 	}
-
 }

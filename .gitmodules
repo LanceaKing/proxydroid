@@ -1,4 +1,4 @@
 [submodule "app/src/main/cpp/redsocks"]
 	path = app/src/main/cpp/redsocks
 	url = https://github.com/LanceaKing/redsocks.git
-	branch = master
+	branch = feat/redsocks-upstream-tls

@@ -5,6 +5,7 @@ add_library(event STATIC
         bufferevent_pair.c
         bufferevent_ratelim.c
         bufferevent_sock.c
+        bufferevent_openssl.c
         epoll.c
         epoll_sub.c
         evdns.c
@@ -24,6 +25,9 @@ add_library(event STATIC
         signal.c
         strlcpy.c
         )
+
+target_link_libraries(event PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+set_property(TARGET event PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(event
         PUBLIC
