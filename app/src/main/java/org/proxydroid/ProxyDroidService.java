@@ -287,6 +287,9 @@ public class ProxyDroidService extends Service {
 	 * Called when the activity is first created.
 	 */
 	public boolean handleCommand() {
+		if (!NativeBinaryInstaller.ensureRedsocks(this)) {
+			return false;
+		}
 
 		String filePath = getFilesDir().getAbsolutePath();
 

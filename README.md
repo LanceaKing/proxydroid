@@ -13,7 +13,7 @@ here is a list of them:
 
 ## REQUIREMENTS
 
-* **JDK** 8 or newer (project uses Java 8 language level)
+* **JDK** 17 (Android Gradle Plugin requirement; source language level is Java 8)
 * **Android SDK** with API **29** (compile and target SDK)
 * **Android NDK** and **CMake** 3.10.2+ (native code is built via `externalNativeBuild`)
 * **Android Studio** or a standalone Gradle install (Android Gradle Plugin **8.1.4**)
@@ -25,6 +25,8 @@ Minimum supported Android version: **API 19** (Android 4.4).
 From the repository root:
 
 ```bash
+git submodule update --init --recursive
+scripts/build-redsocks-assets.sh
 ./gradlew assembleDebug
 ```
 
@@ -35,6 +37,43 @@ Release APK:
 ```
 
 Ensure `ANDROID_HOME` (or `ANDROID_SDK_ROOT`) points at your SDK if you build outside Android Studio.
+
+### redsocks fork and executable assets
+
+`app/src/main/cpp/redsocks` is a submodule of
+[LanceaKing/redsocks](https://github.com/LanceaKing/redsocks/tree/feat/http-connect-sni),
+pinned to a tested commit on `feat/http-connect-sni`. Its `master` follows
+`darkk/redsocks`; update the feature branch and test it before changing the pin.
+Clone with `git clone --recurse-submodules` or initialize it with the command above.
+
+Run `scripts/build-redsocks-assets.sh` after changing the submodule. It uses NDK
+`25.1.8937393` and SDK CMake `3.10.2.4988404` by default (override with
+`REDSOCKS_NDK_VERSION` / `REDSOCKS_CMAKE_VERSION`). It builds ARMv7, ARM64, x86,
+and x86_64, strips and refreshes the ARMv7/x86 assets used by the app, and writes
+their commit and SHA-256 to `assets/redsocks-build.json`. Then build the APK.
+An ordinary Gradle native build alone does not refresh these executable assets.
+
+Before each service start, including the ContentProvider CLI, the app compares
+the bundled and extracted redsocks hashes. Changed or missing executables are
+replaced using a temporary file and atomic rename. Deployment failure stops
+startup. Existing profiles and credentials need no migration.
+
+HTTP CONNECT automatically uses visible TLS SNI with the original port. The
+original TLS bytes are preserved, and Basic/Digest authentication keeps the same
+target across 407 retries. Missing/invalid SNI, non-TLS traffic, a 64 KiB limit,
+or a one-second deadline fall back to IP CONNECT through the configured proxy.
+An upstream that rejects IP CONNECT will still reject that fallback. ECH's hidden
+inner hostname and QUIC/UDP are outside this TCP fix. This change does not add an
+upstream startup health check; the running indicator is not an end-to-end probe.
+
+The fork's `All tests` GitHub Actions workflow runs the original upstream tests,
+CONNECT regressions and C parser checks through the same pytest framework and
+`tests/run` entry point, in one test step per compiler. It uses native Ubuntu
+24.04 with GCC, Clang, ASan and UBSan; Docker is not required. Full local test
+commands and dependencies are in the submodule README.
+
+Build, CI and selected-app acceptance evidence is recorded in
+[the validation notes](docs/http-connect-sni-validation.md).
 
 ## ADB shell content (automation / CLI)
 

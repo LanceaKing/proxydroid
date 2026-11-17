@@ -173,6 +173,9 @@ public class ProxyDroid extends AppCompatActivity implements AppSettingsStore.Li
 		}
 		if (files != null) {
 			for (String file : files) {
+				if ("redsocks".equals(file)) {
+					continue;
+				}
 				InputStream in = null;
 				OutputStream out = null;
 				try {
@@ -192,6 +195,7 @@ public class ProxyDroid extends AppCompatActivity implements AppSettingsStore.Li
 				}
 			}
 		}
+		NativeBinaryInstaller.ensureRedsocks(this);
 	}
 
 	private void copyFile(InputStream in, OutputStream out) throws IOException {
