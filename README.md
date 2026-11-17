@@ -77,6 +77,10 @@ After building, run `python3 scripts/verify-native-engine.py --output app/build/
 to verify all four APK libraries, JNI exports, Android API levels, alignment and
 system-only dynamic dependencies. The JSON records library hashes and each
 repository's commit and working-tree digest; it identifies uncommitted builds.
+GitHub Actions follow the repository boundaries: cntlm runs its core/PAC
+sanitizer regressions, redsocks runs native protocol/engine integration tests,
+and this repository's `Android build` workflow builds all four ABIs and runs
+the APK/JNI verifier above.
 Build and loopback protocol checks are separate from Android device acceptance;
 [the older SNI validation notes](docs/http-connect-sni-validation.md) describe
 an earlier executable build.

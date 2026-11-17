@@ -1,0 +1,51 @@
+name: Android build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Four ABI APK and JNI checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source and pinned native dependencies
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Install Android build dependencies
+        run: |
+          sdkmanager "platforms;android-29" "build-tools;33.0.1" \
+            "ndk;25.1.8937393" "cmake;3.22.1"
+
+      - name: Build debug APK for all four ABIs
+        run: ./gradlew :app:assembleDebug --no-daemon --console=plain
+
+      - name: Verify APK libraries and JNI contract
+        run: |
+          python3 scripts/verify-native-engine.py --output app/build/reports/native-engine.json \
+            --readelf "$ANDROID_HOME/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
+
+      - name: Upload APK and native validation report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: proxydroid-debug
+          retention-days: 7
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/reports/native-engine.json

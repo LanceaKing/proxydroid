@@ -5,6 +5,7 @@ plugins {
 android {
     namespace "org.proxydroid"
     compileSdk 29
+    ndkVersion '25.1.8937393'
 
     defaultConfig {
         applicationId "org.proxydroid"
