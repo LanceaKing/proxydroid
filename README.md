@@ -41,9 +41,9 @@ Ensure `ANDROID_HOME` (or `ANDROID_SDK_ROOT`) points at your SDK if you build ou
 ### redsocks fork and executable assets
 
 `app/src/main/cpp/redsocks` is a submodule of
-[LanceaKing/redsocks](https://github.com/LanceaKing/redsocks/tree/feat/http-connect-sni),
-pinned to a tested commit on `feat/http-connect-sni`. Its `master` follows
-`darkk/redsocks`; update the feature branch and test it before changing the pin.
+[LanceaKing/redsocks](https://github.com/LanceaKing/redsocks/tree/master),
+pinned to the tested SNI fix on the fork's `master`. The fork is based on
+`darkk/redsocks`; run its complete suite before updating the submodule pin.
 Clone with `git clone --recurse-submodules` or initialize it with the command above.
 
 Run `scripts/build-redsocks-assets.sh` after changing the submodule. It uses NDK

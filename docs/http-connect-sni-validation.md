@@ -2,7 +2,7 @@
 
 Date: 2026-11-17.
 
-The redsocks fork is `LanceaKing/redsocks`, branch `feat/http-connect-sni`, based
+The redsocks fork is `LanceaKing/redsocks`; its `master` includes the SNI fix based
 on upstream master `19b822e345f6a291f6cff6b168f1cfdfeeb2cd7d`. ProxyDroid pins
 the fork as a submodule; `app/src/main/assets/redsocks-build.json` records the
 exact commit and the hashes of the executable assets.
