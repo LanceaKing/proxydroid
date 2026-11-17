@@ -36,7 +36,8 @@ def require(condition, message):
 
 def find_readelf(explicit):
     if explicit:
-        return str(Path(explicit).resolve())
+        # LLVM selects its output format from argv[0]; keep the llvm-readelf alias.
+        return str(Path(explicit).absolute())
     found = shutil.which("llvm-readelf")
     if found:
         return found
