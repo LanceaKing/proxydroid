@@ -13,4 +13,6 @@ gen-external-apklibs/
 classes/
 .gradle
 build/
+__pycache__/
+test-results/
 app/release

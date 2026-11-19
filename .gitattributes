@@ -1,0 +1,2 @@
+# Keep the historical benchmark CSV byte for byte, including CRLF endings.
+docs/tls-backend-comparison-20261119.csv -text whitespace=cr-at-eol

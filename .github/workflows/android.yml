@@ -10,9 +10,13 @@ permissions:
 
 jobs:
   android:
-    name: Four ABI APK and JNI checks
+    name: Four ABI APK / ${{ matrix.tls }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        tls: [openssl]
     steps:
       - name: Check out source and pinned native dependencies
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -37,20 +41,31 @@ jobs:
             ndk;25.1.8937393
             cmake;3.22.1
 
-      - name: Build debug APK for all four ABIs
-        run: ./gradlew :app:assembleDebug --no-daemon --console=plain
+      - name: Fetch checksum-locked TLS archive
+        id: tls
+        run: echo "archive=$(python3 scripts/fetch-native-deps.py '${{ matrix.tls }}')" >> "$GITHUB_OUTPUT"
 
-      - name: Verify APK libraries and JNI contract
+      - name: Build debug and release APKs for all four ABIs
         run: |
-          python3 scripts/verify-native-engine.py --output app/build/reports/native-engine.json \
-            --readelf "$ANDROID_HOME/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
+          ./gradlew :app:assembleDebug :app:assembleRelease --no-daemon --console=plain \
+            -PtlsArchive=file://${{ steps.tls.outputs.archive }}
+
+      - name: Verify debug and release libraries and JNI contracts
+        run: |
+          readelf="$ANDROID_HOME/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
+          python3 scripts/verify-native-engine.py --readelf "$readelf" \
+            --output app/build/reports/native-engine.json
+          python3 scripts/verify-native-engine.py app/build/outputs/apk/release/app-release-unsigned.apk \
+            --readelf "$readelf" --output app/build/reports/native-engine-release.json
 
       - name: Upload APK and native validation report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: proxydroid-debug
+          name: proxydroid-debug-release-${{ matrix.tls }}
           retention-days: 7
           path: |
             app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release-unsigned.apk
             app/build/reports/native-engine.json
+            app/build/reports/native-engine-release.json

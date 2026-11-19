@@ -13,6 +13,8 @@ import sys
 import tempfile
 import zipfile
 
+from native_sources import source_record
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ABIS = {"armeabi-v7a": (40, 19), "arm64-v8a": (183, 21),
@@ -59,25 +61,6 @@ def find_readelf(explicit):
     raise ValueError("llvm-readelf unavailable; supply --readelf from your Android NDK")
 
 
-def source_record(directory):
-    def git(*args):
-        return output(["git", *args], cwd=directory).strip()
-    # Include untracked implementation files and deletions, but no ignored builds.
-    names = output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
-                   cwd=directory).split("\0")
-    digest = hashlib.sha256()
-    for name in sorted(set(filter(None, names))):
-        path = directory / name
-        if path.is_dir():  # Nested repositories have their own records below.
-            continue
-        digest.update(name.encode() + b"\0")
-        digest.update(hashlib.sha256(path.read_bytes()).digest() if path.exists() else b"deleted")
-    return {"commit": git("rev-parse", "HEAD"),
-            "branch": git("branch", "--show-current"),
-            "dirty": bool(git("status", "--porcelain", "--untracked-files=all")),
-            "worktree_sha256": digest.hexdigest()}
-
-
 def elf_notes(data):
     is32 = data[4] == 1
     shoff = struct.unpack_from("<I" if is32 else "<Q", data, 32 if is32 else 40)[0]
@@ -102,11 +85,16 @@ def elf_notes(data):
     return notes[(b"Android", 1)], notes[(b"GNU", 3)].hex()
 
 
-def verify(apk, readelf):
+def verify(apk, readelf, backend="openssl"):
     redsocks = ROOT / "app/src/main/cpp/redsocks"
-    cntlm_version = (redsocks / "cntlm/VERSION").read_text().strip()
-    openssl_version = re.search(r"set\(PROXYDROID_OPENSSL_VERSION ([\d.]+)\)",
-                              (ROOT / "app/src/main/cpp/openssl.cmake").read_text())[1]
+    cpp = redsocks.parent
+    cntlm_version = (cpp / "cntlm/VERSION").read_text().strip()
+    dependency = json.loads((cpp / "cmake/dependencies.lock.json").read_text())[backend]
+    sources = {"proxydroid": source_record(ROOT), "redsocks": source_record(redsocks),
+               "cntlm": source_record(cpp / "cntlm"), "libevent": source_record(cpp / "libevent"),
+               "duktape": source_record(cpp / "cntlm/duktape")}
+    identity_prefix = (f"TLS {backend} {dependency['version']} revision={dependency['revision']} "
+                       f"archive={dependency['sha256']} config=")
     libraries = {}
     with zipfile.ZipFile(apk) as archive, tempfile.TemporaryDirectory(prefix="pdroid-elf-") as temporary:
         names = archive.namelist()
@@ -147,28 +135,36 @@ def verify(apk, readelf):
             android, build_id = elf_notes(data)
             android_api = struct.unpack_from("<I", android)[0]
             require(android_api == minimum, member + ": Android API mismatch " + str(android_api))
-            require(("OpenSSL " + openssl_version).encode() in data, member + ": OpenSSL version mismatch")
+            identities = re.findall(re.escape(identity_prefix.encode()) + rb"([0-9a-f]{64})", data)
+            require(len(set(identities)) == 1, member + ": TLS backend/version/source/config identity mismatch")
+            tls_config = identities[0].decode()
+            for component in ("redsocks", "cntlm", "libevent", "duktape"):
+                marker = (component + "=" + sources[component]["worktree_sha256"]).encode()
+                require(marker in data, member + ": " + component + " source digest differs; rebuild the APK")
             require(("redsocks shared engine; cntlm " + cntlm_version).encode() in data,
                     member + ": cntlm build identity mismatch")
             libraries[abi] = {"sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data),
                               "android_api": android_api, "ndk": android[4:68].split(b"\0")[0].decode(),
                               "needed": needed, "jni_exports": len(JNI),
-                              "build_id": build_id}
-    return {"verified": True, "apk": str(apk), "apk_sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
-            "openssl": openssl_version, "cntlm": cntlm_version,
-            "sources": {"proxydroid": source_record(ROOT), "redsocks": source_record(redsocks),
-                        "cntlm": source_record(redsocks / "cntlm")}, "libraries": libraries,
+                              "build_id": build_id, "tls_config_sha256": tls_config}
+    return {"schema_version": 2, "verified": True, "apk": str(apk), "apk_sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
+            "tls": {"backend": backend, "version": dependency["version"],
+                    "revision": dependency["revision"], "archive_sha256": dependency["sha256"],
+                    "options": dependency["options"]}, "cntlm": cntlm_version,
+            "sources": sources, "libraries": libraries,
             "scope": "APK/ELF checks and source snapshot at verification time; device behavior is not exercised"}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("apk", nargs="?", type=Path, default=ROOT / "app/build/outputs/apk/debug/app-debug.apk")
+    parser.add_argument("--tls-backend", choices=("openssl",), default="openssl",
+                        help="expected TLS backend (default: openssl; libevent 2.1.13-stable)")
     parser.add_argument("--readelf", help="path to the Android NDK llvm-readelf binary")
     parser.add_argument("--output", type=Path, help="write the JSON report to this path")
     args = parser.parse_args()
     try:
-        report = json.dumps(verify(args.apk.resolve(), find_readelf(args.readelf)), indent=2) + "\n"
+        report = json.dumps(verify(args.apk.resolve(), find_readelf(args.readelf), args.tls_backend), indent=2) + "\n"
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(report)

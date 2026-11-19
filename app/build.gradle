@@ -2,6 +2,11 @@ plugins {
     id 'com.android.application'
 }
 
+def tlsBackend = providers.gradleProperty('tlsBackend').getOrElse('openssl')
+if (!(tlsBackend in ['openssl'])) {
+    throw new GradleException("tlsBackend=${tlsBackend} is not supported by libevent 2.1.13-stable; supported: openssl")
+}
+
 android {
     namespace "org.proxydroid"
     compileSdk 29
@@ -17,8 +22,9 @@ android {
 
         externalNativeBuild {
             cmake {
-                if (project.hasProperty('opensslArchive')) {
-                    arguments "-DPROXYDROID_OPENSSL_URL=${project.property('opensslArchive')}"
+                arguments "-DTLS_BACKEND=${tlsBackend}", '-DBUILD_TESTING=OFF'
+                if (project.hasProperty('tlsArchive')) {
+                    arguments "-DPROXYDROID_TLS_ARCHIVE=${project.property('tlsArchive')}"
                 }
             }
         }
@@ -49,6 +55,7 @@ android {
         cmake {
             version '3.22.1'
             path "src/main/cpp/CMakeLists.txt"
+            buildStagingDirectory file(".cxx/${tlsBackend}")
         }
     }
 }

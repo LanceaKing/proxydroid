@@ -1,0 +1,135 @@
+name: Native dependency and TLS tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: ${{ matrix.compiler }} / ${{ matrix.tls }} / ASan + UBSan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        tls: [system, openssl]
+    env:
+      CC: ${{ matrix.compiler }}
+      ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+      PYTHONHASHSEED: "0"
+      PYTHON: /usr/bin/python3
+      CFLAGS: -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer
+      LDFLAGS: ${{ matrix.compiler == 'clang' && '-fsanitize=address,undefined --rtlib=compiler-rt --unwindlib=libgcc' || '-fsanitize=address,undefined' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - name: Install native test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential clang libclang-rt-dev llvm cmake ninja-build libevent-dev libssl-dev \
+            openssl python3 python3-pytest iproute2 iptables util-linux curl netcat-openbsd nginx-light squid dante-server xinetd
+      - name: Build core, PAC and engine tests
+        run: |
+          source=app/src/main/cpp
+          extra=()
+          if test '${{ matrix.tls }}' = system; then
+            source="$source/redsocks"
+          else
+            archive=$(python3 scripts/fetch-native-deps.py '${{ matrix.tls }}')
+            extra=(-DPROXYDROID_BUILD_BENCHMARKS=ON -DPROXYDROID_TLS_ARCHIVE="file://$archive")
+            extra+=(-DTLS_BACKEND='${{ matrix.tls }}')
+          fi
+          cmake -S "$source" -B build/native-ci -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+            -DCNTLM_BUILD_TESTS=ON -DBUILD_TESTING=ON "${extra[@]}"
+          cmake --build build/native-ci --parallel 4
+          "$CC" -std=c99 -D_GNU_SOURCE -Wall app/src/main/cpp/redsocks/tests/prlimit-nofile.c -o build/prlimit-nofile
+          if test '${{ matrix.tls }}' = system; then
+            echo "REDSOCKS_BINARY=$PWD/build/native-ci/redsocks" >> "$GITHUB_ENV"
+          else
+            echo "REDSOCKS_BINARY=$PWD/build/native-ci/redsocks/redsocks" >> "$GITHUB_ENV"
+          fi
+      - name: Run core and TLS contracts
+        run: |
+          mkdir -p test-results
+          ctest --test-dir build/native-ci --output-on-failure --output-junit "$PWD/test-results/core.xml"
+          python3 -m unittest discover -s scripts/tests -v
+      - name: Run complete protocol and engine suite
+        run: |
+          if test "$CC" = clang; then
+            REDSOCKS_ASAN_RUNTIME=$(clang --print-file-name=libclang_rt.asan-$(uname -m).so)
+          else
+            REDSOCKS_ASAN_RUNTIME=$(gcc -print-file-name=libasan.so)
+          fi
+          export REDSOCKS_ASAN_RUNTIME
+          export REDSOCKS_PRLIMIT="$PWD/build/prlimit-nofile"
+          export REDSOCKS_TEST_LOG_DIR="$PWD/test-results/network"
+          app/src/main/cpp/redsocks/tests/run --junitxml=test-results/all.xml
+      - name: Upload native reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-${{ matrix.compiler }}-${{ matrix.tls }}
+          retention-days: 7
+          path: test-results/
+
+  macos:
+    name: macOS / default OpenSSL
+    runs-on: macos-latest
+    timeout-minutes: 20
+    env:
+      PYTHONHASHSEED: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - name: Install native test dependencies
+        run: brew install cmake ninja openssl@3 python@3.14
+      - name: Build and test cntlm with strict C99
+        run: |
+          mkdir -p test-results
+          cmake -S app/src/main/cpp/cntlm -B build/cntlm-macos -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_EXTENSIONS=OFF -DCNTLM_BUILD_TESTS=ON
+          cmake --build build/cntlm-macos --parallel 4
+          ctest --test-dir build/cntlm-macos --output-on-failure \
+            --output-junit "$PWD/test-results/cntlm.xml"
+      - name: Build and test the default TLS engine
+        run: |
+          archive=$(python3 scripts/fetch-native-deps.py openssl)
+          cmake -S app/src/main/cpp -B build/native-macos -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_EXTENSIONS=OFF -DCNTLM_BUILD_TESTS=ON -DBUILD_TESTING=ON \
+            -DPROXYDROID_TLS_ARCHIVE="file://$archive"
+          cmake --build build/native-macos --parallel 4
+          ctest --test-dir build/native-macos --output-on-failure \
+            --output-junit "$PWD/test-results/core.xml"
+      - name: Run native TCP, TLS and NTLM loopback regressions
+        run: |
+          export PATH="$(brew --prefix openssl@3)/bin:$PATH"
+          "$(brew --prefix python@3.14)/bin/python3.14" -m venv build/native-python
+          build/native-python/bin/python -m pip install pytest==9.2.0
+          export REDSOCKS_BINARY="$PWD/build/native-macos/redsocks/redsocks"
+          export REDSOCKS_LIBRARY="$PWD/build/native-macos/redsocks/libredsocks.dylib"
+          build/native-python/bin/python -m pytest -q \
+            app/src/main/cpp/redsocks/tests/test_tls_sni.py \
+            app/src/main/cpp/redsocks/tests/test_http_connect_sni.py \
+            app/src/main/cpp/redsocks/tests/test_engine.py \
+            -k 'not repeated_lifecycle_and_failure_cleanup and not tls_close_notify_drains_buffered_response and not cntlm_acl_and_repeated_configuration_cleanup' \
+            --junitxml=test-results/protocols.xml
+      - name: Upload macOS native reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-macos-openssl-default
+          retention-days: 7
+          path: |
+            test-results/
+            build/native-macos/tls-build.json

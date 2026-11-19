@@ -39,12 +39,15 @@ Ensure `ANDROID_HOME` (or `ANDROID_SDK_ROOT`) points at your SDK if you build ou
 
 ### Shared redsocks engine
 
-`app/src/main/cpp/redsocks` tracks the `feat/redsocks-upstream-tls` branch of
-`LanceaKing/redsocks`. Its root-level `cntlm/` submodule tracks the patched
-`feat/redsocks-embedded` branch of `LanceaKing/cntlm`, based on
-`versat/cntlm` master `678d30b8ab4b0b2e3fb89a43bbeedd42d385e5f7`
-(checked 2026-11-17, version 0.94.1). Both dependencies are pinned by Git commit;
-use recursive submodule initialization when cloning or updating.
+`app/src/main/cpp/redsocks`, `cntlm` and `libevent` are sibling Git submodules
+maintained independently. libevent uses the unmodified official
+2.1.13-stable release; cntlm 0.94.1 and redsocks retain only the embedding,
+platform and regression-backed protocol changes described in the dependency
+guide. The parent repository pins each dependency by commit; initialize them
+recursively after cloning or updating. Duktape remains inside cntlm.
+See [native dependency maintenance and TLS evaluation](docs/native-dependencies.md)
+for updating the pins, backend selection, offline builds, standalone tests and
+runnable device benchmarks.
 
 Gradle builds and packages `libredsocks.so` for ARMv7, ARM64, x86 and x86_64.
 The App binds an ordinary libsu RootService, which calls the shared engine
@@ -68,19 +71,25 @@ to prevent loops. No executable redsocks/cntlm/gost asset refresh is needed.
 System trust anchors are exported through a private descriptor; the profile's
 existing `certificate` setting is not used as an upstream CA override.
 
-OpenSSL 3.5.9 is built from its pinned source archive as a static PIC dependency.
-For an offline build, provide the same verified archive with
-`-PopensslArchive=file:///absolute/path/openssl-3.5.9.tar.gz`.
-Native embedding and runnable CLI examples are in
+TLS selection follows the pinned libevent release's native backends.
+libevent 2.1.13-stable supports OpenSSL, so Gradle `-PtlsBackend=openssl` maps
+to the single CMake input `-DTLS_BACKEND=openssl` (also the default). Unsupported
+backends and conflicting libevent options fail configuration. OpenSSL stays at
+the existing locked 3.5.9 version; its revision, SHA-256 and options are unchanged.
+`-PtlsArchive=file:///absolute/path/archive.tar.gz` selects a verified local archive.
+Native embedding and CLI examples are in
 [the engine guide](app/src/main/cpp/redsocks/docs/embedding.md).
-After building, run `python3 scripts/verify-native-engine.py --output app/build/reports/native-engine.json`
-to verify all four APK libraries, JNI exports, Android API levels, alignment and
-system-only dynamic dependencies. The JSON records library hashes and each
-repository's commit and working-tree digest; it identifies uncommitted builds.
-GitHub Actions follow the repository boundaries: cntlm runs its core/PAC
-sanitizer regressions, redsocks runs native protocol/engine integration tests,
-and this repository's `Android build` workflow builds all four ABIs and runs
-the APK/JNI verifier above.
+After building, run `python3 scripts/verify-native-engine.py
+--output app/build/reports/native-engine.json` (on one command line) to verify
+four APK libraries, JNI exports, Android API levels, 16 KiB ELF alignment,
+system-only dynamic dependencies, backend identity and compiled source digests.
+The version 2 report records each repository's commit and directory-scoped source
+digest, plus Duktape's import provenance. Main-repository GitHub Actions run cntlm/PAC and protocol
+sanitizer tests, system-library compatibility checks and four-ABI Android
+debug/release builds, plus macOS native core and loopback regressions. The
+[Pixel 5 controlled loopback comparison](docs/tls-backend-comparison-20261119.md)
+is preserved as historical evidence for the earlier backend variants. Current
+builds and benchmark tooling expose only the pinned libevent's native backends.
 Build and loopback protocol checks are separate from Android device acceptance;
 [the older SNI validation notes](docs/http-connect-sni-validation.md) describe
 an earlier executable build.

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "openssl": {
+    "version": "3.5.9",
+    "revision": "openssl-3.5.9",
+    "url": "https://www.openssl.org/source/openssl-3.5.9.tar.gz",
+    "sha256": "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
+    "options": [
+      "no-shared",
+      "no-tests",
+      "no-apps",
+      "no-module",
+      "no-legacy",
+      "-fPIC"
+    ]
+  },
+  "libevent": {
+    "version": "2.1.13-stable",
+    "url": "https://github.com/libevent/libevent.git",
+    "revision": "release-2.1.13-stable",
+    "commit": "79ddfb460847999b807cba76d04e73891f29c6ee",
+    "source": "git-submodule",
+    "tls_backends": [
+      "openssl"
+    ],
+    "source_patches": []
+  }
+}

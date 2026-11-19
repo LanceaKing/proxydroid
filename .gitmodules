@@ -1,4 +1,11 @@
+[submodule "app/src/main/cpp/cntlm"]
+	path = app/src/main/cpp/cntlm
+	url = https://github.com/LanceaKing/cntlm.git
+	branch = feat/redsocks-embedded
 [submodule "app/src/main/cpp/redsocks"]
 	path = app/src/main/cpp/redsocks
 	url = https://github.com/LanceaKing/redsocks.git
 	branch = feat/redsocks-upstream-tls
+[submodule "app/src/main/cpp/libevent"]
+	path = app/src/main/cpp/libevent
+	url = https://github.com/libevent/libevent.git
