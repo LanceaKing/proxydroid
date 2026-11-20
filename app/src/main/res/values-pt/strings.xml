@@ -179,4 +179,21 @@
     <string name="msg_pac_error">Ficheiro PAC incorreto ou não suportado</string>
     <string name="msg_resolve_error">Nome de anfitrião incorreto ou desconhecido</string>
 
+    <string name="ntlm_mode">Método de autenticação NTLM</string>
+    <string name="ntlm_credential_source">Credenciais NTLM</string>
+    <string name="ntlm_use_password">Usar a palavra-passe</string>
+    <string name="ntlm_use_hashes">Usar hashes da palavra-passe</string>
+    <string name="ntlm_hash_format">Introduza 32 caracteres hexadecimais</string>
+    <string name="ntlm_hashes_required">Introduza os hashes de 32 caracteres hexadecimais exigidos pelo método NTLM selecionado.</string>
+    <string name="ntlm_mode_error">Selecione um método de autenticação NTLM suportado.</string>
+    <string name="ntlm_password_required">Introduza a palavra-passe do proxy ou selecione o uso de hashes nas definições de NTLM.</string>
+    <string name="ntlm_host_required">Introduza o endereço do proxy ou o URL PAC do perfil antes de usar NTLM.</string>
+    <string name="ntlm_proxy_type_error">A autenticação NTLM requer HTTP, HTTPS ou HTTP CONNECT.</string>
+    <string name="ntlm_reconfigure_title">Rever as definições de NTLM</string>
+    <string name="ntlm_reconfigure_message">Este perfil usava um ficheiro cntlm.conf. Volte a introduzir as definições do proxy e de NTLM ou continue com NTLM desativado.</string>
+    <string name="ntlm_reconfigure_enable">Usar as definições de NTLM</string>
+    <string name="ntlm_reconfigure_disable">Continuar sem NTLM</string>
+    <string name="ntlm_reconfigure_check">Ative a autenticação e a autenticação NTLM para usar estas definições.</string>
+    <string name="engine_connecting">A iniciar o motor do proxy…</string>
+    <string name="engine_disconnected">Motor do proxy desligado</string>
 </resources>

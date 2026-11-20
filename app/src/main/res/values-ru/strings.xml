@@ -163,4 +163,21 @@
     <string name="msg_resolve_error">Неверное имя прокси сервера</string>
 
 
+    <string name="ntlm_mode">Метод аутентификации NTLM</string>
+    <string name="ntlm_credential_source">Учётные данные NTLM</string>
+    <string name="ntlm_use_password">Использовать пароль</string>
+    <string name="ntlm_use_hashes">Использовать хеши пароля</string>
+    <string name="ntlm_hash_format">Введите 32 шестнадцатеричных символа</string>
+    <string name="ntlm_hashes_required">Введите хеши из 32 шестнадцатеричных символов, необходимые для выбранного метода NTLM.</string>
+    <string name="ntlm_mode_error">Выберите поддерживаемый метод аутентификации NTLM.</string>
+    <string name="ntlm_password_required">Введите пароль прокси или выберите использование хешей в настройках NTLM.</string>
+    <string name="ntlm_host_required">Перед использованием NTLM укажите адрес прокси или URL файла PAC для профиля.</string>
+    <string name="ntlm_proxy_type_error">Для аутентификации NTLM требуется HTTP, HTTPS или HTTP CONNECT.</string>
+    <string name="ntlm_reconfigure_title">Проверить настройки NTLM</string>
+    <string name="ntlm_reconfigure_message">В этом профиле использовался файл cntlm.conf. Введите настройки прокси и NTLM заново или продолжите с отключённым NTLM.</string>
+    <string name="ntlm_reconfigure_enable">Использовать настройки NTLM</string>
+    <string name="ntlm_reconfigure_disable">Продолжить без NTLM</string>
+    <string name="ntlm_reconfigure_check">Чтобы использовать эти настройки, включите аутентификацию и аутентификацию NTLM.</string>
+    <string name="engine_connecting">Запуск прокси…</string>
+    <string name="engine_disconnected">Прокси отключён</string>
 </resources>

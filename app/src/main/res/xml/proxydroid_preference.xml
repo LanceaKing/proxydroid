@@ -91,6 +91,20 @@
             android:summary="@string/domain_summary"
             android:title="@string/domain" />
 
+        <ListPreference
+            android:key="ntlmAuthMode"
+            android:title="@string/ntlm_mode" />
+        <ListPreference
+            android:key="ntlmUseHashes"
+            android:title="@string/ntlm_credential_source" />
+        <EditTextPreference android:key="ntlmPassNTLMv2" android:title="PassNTLMv2" />
+        <EditTextPreference android:key="ntlmPassNT" android:title="PassNT" />
+        <EditTextPreference android:key="ntlmPassLM" android:title="PassLM" />
+        <Preference
+            android:key="reviewNtlmSettings"
+            android:title="@string/ntlm_reconfigure_title"
+            android:summary="@string/ntlm_reconfigure_message" />
+
         <EditTextPreference
             android:key="certificate"
             android:summary="@string/certificate_summary"
@@ -98,8 +112,6 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/fearute_cat">
-        <Preference android:key="cntlmConfigPath" android:title="@string/cntlm_config"
-            android:summary="@string/cntlm_config_summary" />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="isAutoSetProxy"

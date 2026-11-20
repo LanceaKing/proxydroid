@@ -4,11 +4,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.text.TextUtils;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
 	private static final String DATABASE_NAME = "profiles.db";
-	private static final int DATABASE_VERSION = 2;
+	private static final int DATABASE_VERSION = 3;
 
 	private final Context appContext;
 
@@ -19,6 +20,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
+		createProfilesTable(db);
+		db.execSQL(
+				"CREATE TABLE IF NOT EXISTS " + AppSettingsStore.TABLE_NAME + " ("
+						+ AppSettingsStore.COLUMN_NAME + " TEXT PRIMARY KEY NOT NULL, "
+						+ AppSettingsStore.COLUMN_VALUE + " TEXT"
+						+ ");"
+		);
+		insertDefaultProfiles(db);
+	}
+
+	private static void createProfilesTable(SQLiteDatabase db) {
 		db.execSQL(
 				"CREATE TABLE " + Profile.TABLE_NAME + " ("
 						+ Profile.Columns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -30,7 +42,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						+ Profile.Columns.PROXIED_APPS + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.USER + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.PASSWORD + " TEXT NOT NULL DEFAULT '', "
-						+ Profile.Columns.CNTLM_CONFIG_PATH + " TEXT NOT NULL DEFAULT '', "
+						+ Profile.Columns.NTLM_AUTH_MODE + " TEXT NOT NULL DEFAULT '" + NtlmSettings.DEFAULT_MODE + "', "
+						+ Profile.Columns.NTLM_USE_HASHES + " BOOLEAN NOT NULL DEFAULT 0, "
+						+ Profile.Columns.NTLM_PASS_NTLMV2 + " TEXT NOT NULL DEFAULT '', "
+						+ Profile.Columns.NTLM_PASS_NT + " TEXT NOT NULL DEFAULT '', "
+						+ Profile.Columns.NTLM_PASS_LM + " TEXT NOT NULL DEFAULT '', "
+						+ Profile.Columns.NTLM_RECONFIGURE + " BOOLEAN NOT NULL DEFAULT 0, "
 						+ Profile.Columns.CERTIFICATE + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.IS_AUTH + " BOOLEAN NOT NULL DEFAULT 0, "
 						+ Profile.Columns.IS_NTLM + " BOOLEAN NOT NULL DEFAULT 0, "
@@ -44,21 +61,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						+ Profile.Columns.EXCLUDED_SSID + " TEXT NOT NULL DEFAULT ''"
 						+ ");"
 		);
-		db.execSQL(
-				"CREATE TABLE IF NOT EXISTS " + AppSettingsStore.TABLE_NAME + " ("
-						+ AppSettingsStore.COLUMN_NAME + " TEXT PRIMARY KEY NOT NULL, "
-						+ AppSettingsStore.COLUMN_VALUE + " TEXT"
-						+ ");"
-		);
-
-		insertDefaultProfiles(db);
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		if (oldVersion < 2) {
-			db.execSQL("ALTER TABLE " + Profile.TABLE_NAME + " ADD COLUMN "
-					+ Profile.Columns.CNTLM_CONFIG_PATH + " TEXT NOT NULL DEFAULT ''");
+		if (oldVersion < 3) {
+			String table = Profile.TABLE_NAME;
+			String legacy = "profiles_before_ntlm_ui";
+			String columns = TextUtils.join(", ", Profile.Columns.BASE_COLUMNS);
+			String reconfigure = oldVersion >= 2 ? "CASE WHEN cntlmConfigPath <> '' THEN 1 ELSE 0 END" : "0";
+			db.execSQL("ALTER TABLE " + table + " RENAME TO " + legacy);
+			createProfilesTable(db);
+			db.execSQL("INSERT INTO " + table + " (" + columns + ", " + Profile.Columns.NTLM_RECONFIGURE
+					+ ") SELECT " + columns + ", " + reconfigure + " FROM " + legacy);
+			// Preserve AUTOINCREMENT even if the profile with the highest ID was deleted.
+			db.execSQL("DELETE FROM sqlite_sequence WHERE name = ?", new String[]{table});
+			db.execSQL("UPDATE sqlite_sequence SET name = ? WHERE name = ?", new String[]{table, legacy});
+			db.execSQL("DROP TABLE " + legacy);
 		}
 	}
 

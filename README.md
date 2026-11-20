@@ -56,14 +56,18 @@ proxy using TLS 1.2 or newer, SNI and system trust anchors with hostname/IP
 verification. TLS connections use buffered I/O. The target site's original TLS
 stream remains intact. CONNECT still uses visible target SNI when available.
 
-NTLM uses cntlm's HTTP/CONNECT, authentication, connection cache, NoProxy,
-ACL, additional Listen/SOCKS5/Tunnel ports, NTLMToBasic and ISA scanner modules
-inside the same library and upstream connection. An optional `cntlmConfigPath`
-profile setting selects an existing cntlm configuration file readable by the
-App. Missing Proxy/Username/Domain/Password values fall back to profile values;
-supplied hashes suppress fallback password injection. Process controls such as
-PidFile/User/daemonization are rejected in the bound host. Platform-specific
-GSS/Kerberos and Windows SSPI are outside the Android embedded target.
+For an HTTP, HTTPS or HTTP CONNECT profile, turn on **Enable Authentication**
+and **NTLM Authentication**. ProxyDroid uses the profile's proxy address and
+username. Under **NTLM Authentication**, set the optional **Domain**, choose
+the authentication method (default `NTLMv2`), and choose **Use Password** or
+**Use password hashes**. The hash option shows only the fields required by the
+selected method. Each hash must have 32 hexadecimal characters.
+
+ProxyDroid generates the embedded cntlm configuration when starting. If a
+profile previously selected a `cntlm.conf` file, open **Review NTLM settings**
+after entering the profile details again. Confirm **Use NTLM settings** or
+**Continue without NTLM** before the profile can connect. Existing NTLM profiles
+that used the account fields can continue with their saved password and domain.
 
 The root host installs its owned `PDROID_OUT` chain after listeners are ready,
 removes its tagged OUTPUT jump before stopping, and marks its outbound sockets
@@ -119,6 +123,9 @@ adb shell content call --uri content://org.proxydroid.cli/profiles --method acti
 ```
 
 On multi-user devices you may need `--user 0` (or the target user id) on the `content` subcommand.
+If NTLM settings fail preflight validation, `start` returns `success=false`
+with an `error` message. A profile with `ntlmReconfigure=1` needs confirmation
+in the app before `start` can succeed.
 
 ### List profiles
 
@@ -171,7 +178,12 @@ adb shell content delete --uri content://org.proxydroid.cli/profiles/1
 | `bypassAddrs`    | text    |                                            |
 | `user` / `password` | text |                                            |
 | `certificate`    | text    | Existing client certificate setting        |
-| `cntlmConfigPath` | text    | Optional App-readable cntlm config file    |
+| `ntlmAuthMode`   | text    | `NTLMv2` (default), `NTLM2SR`, `NT`, `NTLM`, or `LM` |
+| `ntlmUseHashes`  | boolean | Opt in to hashes (default 0)               |
+| `ntlmPassNTLMv2` | text    | Required for `NTLMv2` in hash mode         |
+| `ntlmPassNT`     | text    | Required for `NTLM2SR`, `NT`, and `NTLM`   |
+| `ntlmPassLM`     | text    | Required for `LM` and `NTLM`               |
+| `ntlmReconfigure` | boolean | Read-only. Review a former file-based profile in the app. |
 | `proxiedApps`    | text    |                                            |
 | `isAuth`         | boolean | SQLite stores 0/1; bind as `b:` or `i:`    |
 | `isNTLM`         | boolean | same                                       |

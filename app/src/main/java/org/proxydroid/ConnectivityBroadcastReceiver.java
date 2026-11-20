@@ -157,7 +157,6 @@ public class ConnectivityBroadcastReceiver extends BroadcastReceiver {
 				if (!Utils.isWorking()) {
 					ProxyDroidReceiver pdr = new ProxyDroidReceiver();
 					AppSettingsStore.putString(context, AppSettingsStore.KEY_LAST_SSID, curSSID);
-					Utils.setConnecting(true);
 					pdr.onReceive(context, intent);
 				}
 			}

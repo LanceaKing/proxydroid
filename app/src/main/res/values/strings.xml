@@ -189,10 +189,21 @@
     <string name="msg_pac_error">Incorrect or unsupported PAC file</string>
     <string name="msg_resolve_error">Incorrect or unknown proxy host name</string>
 
-    <string name="cntlm_config">Advanced cntlm.conf</string>
-    <string name="cntlm_config_summary">Optional compatible configuration file; supplied values take priority</string>
-    <string name="cntlm_choose_file">Choose configuration file</string>
-    <string name="cntlm_clear_file">Use profile settings</string>
+    <string name="ntlm_mode">NTLM authentication method</string>
+    <string name="ntlm_credential_source">NTLM credentials</string>
+    <string name="ntlm_use_password">Use Password</string>
+    <string name="ntlm_use_hashes">Use password hashes</string>
+    <string name="ntlm_hash_format">Enter 32 hexadecimal characters</string>
+    <string name="ntlm_hashes_required">Enter the required 32-character hexadecimal hashes for the selected NTLM method.</string>
+    <string name="ntlm_mode_error">Select a supported NTLM authentication method.</string>
+    <string name="ntlm_password_required">Enter the proxy password or select password hashes under NTLM Authentication.</string>
+    <string name="ntlm_host_required">Enter the proxy address or Profile PAC URL before using NTLM.</string>
+    <string name="ntlm_proxy_type_error">NTLM authentication requires HTTP, HTTPS, or HTTP CONNECT.</string>
+    <string name="ntlm_reconfigure_title">Review NTLM settings</string>
+    <string name="ntlm_reconfigure_message">This profile used a cntlm.conf file. Re-enter its proxy and NTLM settings here, or choose to continue with NTLM disabled.</string>
+    <string name="ntlm_reconfigure_enable">Use NTLM settings</string>
+    <string name="ntlm_reconfigure_disable">Continue without NTLM</string>
+    <string name="ntlm_reconfigure_check">Enable Authentication and NTLM Authentication to use your NTLM settings.</string>
     <string name="engine_connecting">Starting proxy engine…</string>
     <string name="engine_disconnected">Proxy engine disconnected</string>
 </resources>

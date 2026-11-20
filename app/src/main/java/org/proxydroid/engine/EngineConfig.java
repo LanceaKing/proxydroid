@@ -7,11 +7,10 @@ import android.os.ParcelFileDescriptor;
 import android.util.Base64;
 
 import org.proxydroid.Profile;
+import org.proxydroid.NtlmSettings;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,7 +18,6 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -35,10 +33,9 @@ public final class EngineConfig implements Closeable {
     public static EngineConfig prepare(Context context, Bundle profile, String originalHost, String address, int port) throws Exception {
         String type = profile.getString(Profile.Columns.PROXY_TYPE, "http");
         boolean tls = "https".equals(type);
-        String path = profile.getString(Profile.Columns.CNTLM_CONFIG_PATH, "");
-        boolean ntlm = !path.isEmpty() || (profile.getBoolean(Profile.Columns.IS_AUTH) && profile.getBoolean(Profile.Columns.IS_NTLM));
-        if (ntlm && !(type.equals("http") || tls || type.equals("http-tunnel")))
-            throw new IOException("cntlm requires HTTP or HTTPS proxy type");
+        int error = NtlmSettings.startError(profile, type);
+        if (error != 0) throw new IOException(context.getString(error));
+        boolean ntlm = NtlmSettings.requested(profile) && NtlmSettings.supportsProxyType(type);
         if (!address.matches("[0-9.]+") || port < 1 || port > 65535) throw new IOException("IPv4 proxy address and valid port required");
         StringBuilder config = new StringBuilder("base { log_debug = off; log_info = off; daemon = off; redirector = iptables; }\n");
         if (type.equals("http") || tls) {
@@ -68,7 +65,7 @@ public final class EngineConfig implements Closeable {
         try {
             c = privateDescriptor(context, config.toString().getBytes(StandardCharsets.UTF_8));
             if (tls) t = privateDescriptor(context, trustAnchors());
-            if (ntlm) n = privateDescriptor(context, mergeCntlm(profile, originalHost, port).getBytes(StandardCharsets.UTF_8));
+            if (ntlm) n = privateDescriptor(context, NtlmSettings.configuration(profile, originalHost, port).getBytes(StandardCharsets.UTF_8));
             return new EngineConfig(c, t, n, rules);
         } catch (Exception e) {
             if (c != null) c.close(); if (t != null) t.close(); if (n != null) n.close(); throw e;
@@ -87,39 +84,6 @@ public final class EngineConfig implements Closeable {
         else if (p.getBoolean(Profile.Columns.IS_AUTH)) out.append(" login = ").append(quote(p.getString(Profile.Columns.USER, "")))
             .append("; password = ").append(quote(p.getString(Profile.Columns.PASSWORD, ""))).append(';');
         out.append(" }\n");
-    }
-    /* Retain the original file, repeated options, comments and section syntax.
-     * Only absent settings are appended. Any supplied hash suppresses fallback
-     * App password injection, including a different selected Auth dialect. */
-    static String mergeCntlm(Bundle p, String host, int port) throws IOException {
-        String path = p.getString(Profile.Columns.CNTLM_CONFIG_PATH, "");
-        String source = "";
-        if (!path.isEmpty()) {
-            try (FileInputStream in = new FileInputStream(path); ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
-                byte[] buffer = new byte[4096]; int count;
-                while ((count = in.read(buffer)) >= 0) {
-                    if (bytes.size()+count > 1024*1024) throw new IOException("cntlm configuration exceeds 1 MiB");
-                    bytes.write(buffer, 0, count);
-                }
-                source = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
-            }
-        }
-        Set<String> keys = new HashSet<>();
-        for (String line : source.split("\\r?\\n")) {
-            String text = line.trim();
-            if (text.isEmpty() || text.startsWith("#") || text.startsWith(";") || text.startsWith("[")) continue;
-            keys.add(text.split("\\s+", 2)[0].toLowerCase(Locale.ROOT));
-        }
-        StringBuilder out = new StringBuilder(source).append('\n');
-        fallback(out, keys, "Proxy", host+":"+port);
-        fallback(out, keys, "Username", p.getString(Profile.Columns.USER, ""));
-        fallback(out, keys, "Domain", p.getString(Profile.Columns.DOMAIN, ""));
-        if (!keys.contains("passlm") && !keys.contains("passnt") && !keys.contains("passntlmv2"))
-            fallback(out, keys, "Password", p.getString(Profile.Columns.PASSWORD, ""));
-        return out.toString();
-    }
-    private static void fallback(StringBuilder out, Set<String> keys, String key, String value) throws IOException {
-        if (!keys.contains(key.toLowerCase(Locale.ROOT)) && value != null && !value.isEmpty()) out.append(key).append(' ').append(quote(value)).append('\n');
     }
     private static byte[] trustAnchors() throws Exception {
         TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());

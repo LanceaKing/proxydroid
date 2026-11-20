@@ -114,6 +114,7 @@ public class ProxyDroidCLI extends ContentProvider {
 
 	@Override
 	public Uri insert(@NonNull Uri uri, ContentValues values) {
+		rejectNtlmReviewWrite(values);
 		if (URI_MATCHER.match(uri) != PROFILES) {
 			throw new IllegalArgumentException("Unknown URI " + uri);
 		}
@@ -129,6 +130,7 @@ public class ProxyDroidCLI extends ContentProvider {
 
 	@Override
 	public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+		rejectNtlmReviewWrite(values);
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		int count;
 		switch (URI_MATCHER.match(uri)) {
@@ -215,12 +217,21 @@ public class ProxyDroidCLI extends ContentProvider {
 	public static final String METHOD_STOP = "stop";
 	public static final String METHOD_ACTIVATE = "activate";
 	public static final String EXTRA_SUCCESS = "success";
+	public static final String EXTRA_ERROR = "error";
 
 	@Override
 	public Bundle call(@NonNull String method, String arg, Bundle extras) {
 		switch (method) {
 			case METHOD_START:
 				Profile p = ProfileStore.loadActiveProfile(getContext());
+				if (p != null) {
+					int error = ProxyServiceHelper.startError(ProxyServiceHelper.buildStartExtras(p));
+					if (error != 0) {
+						Bundle rejected = callResult(false);
+						rejected.putString(EXTRA_ERROR, getContext().getString(error));
+						return rejected;
+					}
+				}
 				return callResult(ProxyServiceHelper.startProxyService(getContext(), p));
 			case METHOD_STOP:
 				return callResult(ProxyServiceHelper.stopProxyService(getContext()));
@@ -229,6 +240,15 @@ public class ProxyDroidCLI extends ContentProvider {
 				return callResult(ProfileStore.activateProfile(getContext(), id));
 		}
 		return super.call(method, arg, extras);
+	}
+
+	private static void rejectNtlmReviewWrite(ContentValues values) {
+		if (values == null) return;
+		for (String key : values.keySet()) {
+			if (Profile.Columns.NTLM_RECONFIGURE.equalsIgnoreCase(key)) {
+				throw new IllegalArgumentException("ntlmReconfigure is read-only");
+			}
+		}
 	}
 
 	private Bundle callResult(boolean ok) {

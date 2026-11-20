@@ -42,6 +42,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import org.proxydroid.utils.Utils;
+
 public class ProxyDroidReceiver extends BroadcastReceiver {
 
 	@Override
@@ -49,8 +51,9 @@ public class ProxyDroidReceiver extends BroadcastReceiver {
 
 		Profile mProfile = ProfileStore.loadActiveProfile(context);
 
-		if (mProfile != null && mProfile.isAutoConnect()) {
-			ProxyServiceHelper.startProxyService(context, mProfile);
+		if (mProfile != null && mProfile.isAutoConnect()
+				&& ProxyServiceHelper.startProxyService(context, mProfile)) {
+			Utils.setConnecting(true);
 		}
 	}
 

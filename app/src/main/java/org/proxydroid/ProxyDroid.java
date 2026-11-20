@@ -384,6 +384,7 @@ public class ProxyDroid extends AppCompatActivity implements AppSettingsStore.Li
 			if (AppSettingsStore.getBoolean(this, AppSettingsStore.KEY_IS_CONNECTING, false)) {
 				Log.d(TAG, "Connecting start");
 				preferenceUi.isRunningCheck.setEnabled(false);
+				preferenceUi.disableAll();
 				pd = ProgressDialog.show(this, "", getString(R.string.connecting), true, true);
 			} else {
 				Log.d(TAG, "Connecting finish");
@@ -392,6 +393,7 @@ public class ProxyDroid extends AppCompatActivity implements AppSettingsStore.Li
 					pd = null;
 				}
 				preferenceUi.isRunningCheck.setEnabled(true);
+				preferenceUi.refreshFromActiveProfile();
 			}
 		}
 
@@ -403,7 +405,9 @@ public class ProxyDroid extends AppCompatActivity implements AppSettingsStore.Li
 				if (preferenceUi != null && preferenceUi.isRunningCheck != null) {
 					preferenceUi.isRunningCheck.setChecked(true);
 				}
-				if (!Utils.isConnecting()) serviceStart();
+				if (!Utils.isConnecting() && !Utils.isWorking() && !serviceStart()) {
+					AppSettingsStore.putBoolean(this, AppSettingsStore.KEY_IS_RUNNING, false);
+				}
 			} else {
 				if (!Utils.isConnecting()) serviceStop();
 				if (preferenceUi != null && preferenceUi.isRunningCheck != null) {

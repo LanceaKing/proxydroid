@@ -120,8 +120,9 @@ public class ProxyDroidWidgetProvider extends AppWidgetProvider {
 			} else {
 
 				Profile mProfile = ProfileStore.loadActiveProfile(context);
-				if (mProfile != null) {
-					ProxyServiceHelper.startProxyService(context, mProfile);
+				if (!ProxyServiceHelper.startProxyService(context, mProfile)) {
+					AppWidgetManager awm = AppWidgetManager.getInstance(context);
+					onUpdate(context, awm, awm.getAppWidgetIds(new ComponentName(context, ProxyDroidWidgetProvider.class)));
 				}
 
 			}

@@ -16,7 +16,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
@@ -39,8 +41,10 @@ import java.util.Locale;
 public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 
 	private static final int REQUEST_NOTIFICATION_RINGTONE = 100;
-	private static final int REQUEST_CNTLM_FILE = 101;
-	private Preference cntlmConfig;
+	private ListPreference ntlmMode;
+	private ListPreference ntlmCredentials;
+	private EditTextPreference[] ntlmHashes;
+	private Preference reviewNtlm;
 
 	CheckBoxPreference isAutoConnectCheck;
 	CheckBoxPreference isAutoSetProxyCheck;
@@ -126,16 +130,7 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		passwordText = findPreference(Profile.Columns.PASSWORD);
 		domainText = findPreference(Profile.Columns.DOMAIN);
 		certificateText = findPreference(Profile.Columns.CERTIFICATE);
-		cntlmConfig = findPreference(Profile.Columns.CNTLM_CONFIG_PATH);
-		cntlmConfig.setOnPreferenceClickListener(pref -> {
-			new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-				.setTitle(R.string.cntlm_config)
-				.setItems(new String[]{getString(R.string.cntlm_choose_file), getString(R.string.cntlm_clear_file)}, (dialog, which) -> {
-					if (which == 0) startActivityForResult(new Intent(requireContext(), FileChooser.class), REQUEST_CNTLM_FILE);
-					else new ProxyDroidPreferenceDataStore(requireContext()).putString(Profile.Columns.CNTLM_CONFIG_PATH, "");
-				}).show();
-			return true;
-		});
+		wireNtlmPreferences();
 		bypassAddrs = findPreference(Profile.Columns.BYPASS_ADDRS);
 		ssidList = findPreference(Profile.Columns.SSID);
 		excludedSsidList = findPreference(Profile.Columns.EXCLUDED_SSID);
@@ -175,6 +170,70 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		}
 	}
 
+	private void wireNtlmPreferences() {
+		ntlmMode = findPreference(Profile.Columns.NTLM_AUTH_MODE);
+		NtlmSettings.Mode[] modes = NtlmSettings.Mode.values();
+		String[] names = new String[modes.length];
+		for (int i = 0; i < modes.length; i++) names[i] = modes[i].name();
+		ntlmMode.setEntries(names);
+		ntlmMode.setEntryValues(names);
+		ntlmMode.setSummaryProvider(ListPreference.SimpleSummaryProvider.getInstance());
+		ntlmCredentials = findPreference(Profile.Columns.NTLM_USE_HASHES);
+		ntlmCredentials.setEntries(new CharSequence[]{getString(R.string.ntlm_use_password), getString(R.string.ntlm_use_hashes)});
+		ntlmCredentials.setEntryValues(new String[]{"false", "true"});
+		ntlmCredentials.setSummaryProvider(ListPreference.SimpleSummaryProvider.getInstance());
+		ntlmHashes = new EditTextPreference[]{findPreference(Profile.Columns.NTLM_PASS_NTLMV2),
+				findPreference(Profile.Columns.NTLM_PASS_NT), findPreference(Profile.Columns.NTLM_PASS_LM)};
+		for (EditTextPreference hash : ntlmHashes) {
+			hash.setOnBindEditTextListener(edit -> edit.setInputType(InputType.TYPE_CLASS_TEXT
+					| InputType.TYPE_TEXT_VARIATION_PASSWORD));
+			hash.setOnPreferenceChangeListener((pref, value) -> {
+				String input = (String) value;
+				if (input.isEmpty() || NtlmSettings.isHash(input)) return true;
+				Toast.makeText(requireContext(), R.string.ntlm_hash_format, Toast.LENGTH_LONG).show();
+				return false;
+			});
+		}
+		reviewNtlm = findPreference("reviewNtlmSettings");
+		reviewNtlm.setOnPreferenceClickListener(pref -> {
+			long id = ProfileStore.getActiveProfileId(requireContext());
+			new AlertDialog.Builder(requireContext())
+					.setTitle(R.string.ntlm_reconfigure_title)
+					.setMessage(R.string.ntlm_reconfigure_message)
+					.setPositiveButton(R.string.ntlm_reconfigure_enable, (dialog, which) -> confirmNtlm(id, true))
+					.setNeutralButton(R.string.ntlm_reconfigure_disable, (dialog, which) -> confirmNtlm(id, false))
+					.setNegativeButton(android.R.string.cancel, null)
+					.show();
+			return true;
+		});
+	}
+
+	private void confirmNtlm(long id, boolean enable) {
+		Context context = requireContext();
+		if (id < 0 || id != ProfileStore.getActiveProfileId(context)) return;
+		int error = ProfileStore.confirmNtlmSettings(context, id, enable);
+		if (error != 0) Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+	}
+
+	private boolean canUseNtlm() {
+		return isPACCheck.isChecked() || NtlmSettings.supportsProxyType(proxyTypeList.getValue());
+	}
+
+	private boolean updateNtlmVisibility() {
+		boolean supported = canUseNtlm();
+		boolean ntlm = supported && isAuthCheck.isChecked() && isNTLMCheck.isChecked();
+		boolean useHashes = ntlm && Boolean.parseBoolean(ntlmCredentials.getValue());
+		isNTLMCheck.setVisible(supported);
+		domainText.setVisible(ntlm);
+		ntlmMode.setVisible(ntlm);
+		ntlmCredentials.setVisible(ntlm);
+		NtlmSettings.Mode mode = NtlmSettings.mode(ntlmMode.getValue());
+		for (EditTextPreference hash : ntlmHashes) {
+			hash.setVisible(useHashes && mode != null && mode.needsHash(hash.getKey()));
+		}
+		return useHashes;
+	}
+
 	void openNotificationRingtonePicker() {
 		Context ctx = getContext();
 		if (ctx == null) {
@@ -197,11 +256,6 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode == REQUEST_CNTLM_FILE) {
-			if (resultCode == Activity.RESULT_OK && data != null)
-				new ProxyDroidPreferenceDataStore(requireContext()).putString(Profile.Columns.CNTLM_CONFIG_PATH, data.getStringExtra(Constraints.FILE_PATH));
-			return;
-		}
 		if (requestCode != REQUEST_NOTIFICATION_RINGTONE) {
 			return;
 		}
@@ -272,8 +326,12 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 			loadNetworkList();
 		}
 		applyProfileToWidgets(model);
-		if (!AppSettingsStore.getBoolean(ctx, AppSettingsStore.KEY_IS_RUNNING, false)) {
-			enableAll();
+		boolean useHashes = updateNtlmVisibility();
+		if (!AppSettingsStore.getBoolean(ctx, AppSettingsStore.KEY_IS_RUNNING, false)
+				&& !AppSettingsStore.getBoolean(ctx, AppSettingsStore.KEY_IS_CONNECTING, false)) {
+			enableAll(useHashes);
+		} else {
+			disableAll();
 		}
 		applySummaries(model);
 	}
@@ -297,6 +355,14 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		isPACCheck.setChecked(p.isPAC());
 		isAuthCheck.setChecked(p.isAuth());
 		isNTLMCheck.setChecked(p.isNTLM());
+		ntlmMode.setValue(p.getNtlmAuthMode());
+		ntlmCredentials.setValue(Boolean.toString(p.usesNtlmHashes()));
+		String[] values = {p.getNtlmPassNTLMv2(), p.getNtlmPassNT(), p.getNtlmPassLM()};
+		for (int i = 0; i < ntlmHashes.length; i++) {
+			ntlmHashes[i].setText(values[i]);
+			ntlmHashes[i].setSummary(values[i].isEmpty() ? getString(R.string.ntlm_hash_format) : "*********");
+		}
+		reviewNtlm.setVisible(p.needsNtlmReconfiguration());
 		isAutoConnectCheck.setChecked(p.isAutoConnect());
 		isAutoSetProxyCheck.setChecked(p.isAutoSetProxy());
 		isBypassAppsCheck.setChecked(p.isBypassApps());
@@ -329,8 +395,6 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		} else {
 			userText.setSummary(user);
 		}
-		cntlmConfig.setSummary(p.getCntlmConfigPath() == null || p.getCntlmConfigPath().isEmpty()
-				? getString(R.string.cntlm_config_summary) : p.getCntlmConfigPath());
 		String cert = p.getCertificate() != null ? p.getCertificate() : "";
 		if (cert.isEmpty()) {
 			certificateText.setSummary(ctx.getString(R.string.certificate_summary));
@@ -454,7 +518,7 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		profileList.setSummary(ProfileStore.getProfileDisplayName(ctx, active));
 	}
 
-	void enableAll() {
+	private void enableAll(boolean useHashes) {
 		if (hostText == null) {
 			return;
 		}
@@ -472,21 +536,14 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 
 		bypassAddrs.setEnabled(true);
 
-		if (isAuthCheck.isChecked()) {
-			userText.setEnabled(true);
-			passwordText.setEnabled(true);
-			isNTLMCheck.setEnabled(true);
-			if (isNTLMCheck.isChecked()) {
-				domainText.setEnabled(true);
-			} else {
-				domainText.setEnabled(false);
-			}
-		} else {
-			userText.setEnabled(false);
-			passwordText.setEnabled(false);
-			isNTLMCheck.setEnabled(false);
-			domainText.setEnabled(false);
-		}
+		userText.setEnabled(isAuthCheck.isChecked());
+		passwordText.setEnabled(isAuthCheck.isChecked() && !useHashes);
+		isNTLMCheck.setEnabled(isAuthCheck.isChecked());
+		for (EditTextPreference hash : ntlmHashes) hash.setEnabled(true);
+		domainText.setEnabled(true);
+		ntlmMode.setEnabled(true);
+		ntlmCredentials.setEnabled(true);
+		reviewNtlm.setEnabled(true);
 		if ("https".equals(proxyTypeList.getValue())) {
 			certificateText.setEnabled(true);
 		} else {
@@ -523,6 +580,10 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		userText.setEnabled(false);
 		passwordText.setEnabled(false);
 		domainText.setEnabled(false);
+		ntlmMode.setEnabled(false);
+		ntlmCredentials.setEnabled(false);
+		for (EditTextPreference hash : ntlmHashes) hash.setEnabled(false);
+		reviewNtlm.setEnabled(false);
 		certificateText.setEnabled(false);
 		ssidList.setEnabled(false);
 		excludedSsidList.setEnabled(false);

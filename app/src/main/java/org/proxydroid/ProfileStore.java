@@ -1,10 +1,12 @@
 package org.proxydroid;
 
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Bundle;
 
 public final class ProfileStore {
 	public static final String NEW_PROFILE_SENTINEL = "0";
@@ -124,6 +126,42 @@ public final class ProfileStore {
 	public static Profile loadActiveProfile(Context context) {
 		long id = getActiveProfileId(context);
 		return loadProfileById(context, id);
+	}
+
+	/** Clears the upgrade block only after an explicit choice for this profile. */
+	static int confirmNtlmSettings(Context context, long id, boolean enable) {
+		if (AppSettingsStore.getBoolean(context, AppSettingsStore.KEY_IS_RUNNING, false)
+				|| AppSettingsStore.getBoolean(context, AppSettingsStore.KEY_IS_CONNECTING, false)) return 0;
+		try (DatabaseHelper helper = new DatabaseHelper(context)) {
+			SQLiteDatabase db = helper.getWritableDatabase();
+			db.beginTransaction();
+			try {
+				String where = Profile.Columns._ID + " = ? AND " + Profile.Columns.NTLM_RECONFIGURE + " <> 0";
+				String[] args = {String.valueOf(id)};
+				try (Cursor cursor = db.query(Profile.TABLE_NAME, Profile.Columns.ALL_COLUMNS, where, args, null, null, null)) {
+					if (!cursor.moveToFirst()) return 0;
+					if (enable) {
+						Profile profile = Profile.fromCursor(cursor);
+						if (!profile.isPAC() && !NtlmSettings.supportsProxyType(profile.getProxyType()))
+							return R.string.ntlm_proxy_type_error;
+						if (!profile.isAuth() || !profile.isNTLM()) return R.string.ntlm_reconfigure_check;
+					Bundle extras = ProxyServiceHelper.buildStartExtras(profile);
+						extras.putBoolean(Profile.Columns.NTLM_RECONFIGURE, false);
+						int error = ProxyServiceHelper.startError(extras);
+						if (error != 0) return error;
+					}
+				}
+				ContentValues changes = new ContentValues();
+				changes.put(Profile.Columns.NTLM_RECONFIGURE, false);
+				if (!enable) changes.put(Profile.Columns.IS_NTLM, false);
+				db.update(Profile.TABLE_NAME, changes, where, args);
+				db.setTransactionSuccessful();
+			} finally {
+				db.endTransaction();
+			}
+		}
+		ProxyDroidCLI.notifyChanged(context);
+		return 0;
 	}
 
 	/**

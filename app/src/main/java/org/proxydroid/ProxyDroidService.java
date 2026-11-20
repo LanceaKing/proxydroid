@@ -538,6 +538,13 @@ public class ProxyDroidService extends Service {
 			if (active == null) { stopSelf(); return START_NOT_STICKY; }
 			pendingProfile = ProxyServiceHelper.buildStartExtras(active);
 		} else pendingProfile = new Bundle(intent.getExtras());
+		int error = ProxyServiceHelper.startError(pendingProfile);
+		if (error != 0) {
+			String message = getString(error);
+			notifyAlert(getString(R.string.engine_connecting), message);
+			connectionFailed(message);
+			return START_NOT_STICKY;
+		}
 		desired = true;
 		AppSettingsStore.putBoolean(this, AppSettingsStore.KEY_ENGINE_DESIRED, true);
 		++generation; rebinds = 0;

@@ -79,8 +79,16 @@ public class ProxyDroidPreferenceDataStore extends PreferenceDataStore {
 			case Profile.Columns.DOMAIN:
 				cv.put(Profile.Columns.DOMAIN, v);
 				break;
-			case Profile.Columns.CNTLM_CONFIG_PATH:
-				cv.put(Profile.Columns.CNTLM_CONFIG_PATH, v);
+			case Profile.Columns.NTLM_AUTH_MODE:
+				if (NtlmSettings.mode(v) != null) cv.put(key, v);
+				break;
+			case Profile.Columns.NTLM_USE_HASHES:
+				cv.put(key, Boolean.parseBoolean(v));
+				break;
+			case Profile.Columns.NTLM_PASS_NTLMV2:
+			case Profile.Columns.NTLM_PASS_NT:
+			case Profile.Columns.NTLM_PASS_LM:
+				if (v.isEmpty() || NtlmSettings.isHash(v)) cv.put(key, v);
 				break;
 			case Profile.Columns.CERTIFICATE:
 				cv.put(Profile.Columns.CERTIFICATE, v);
@@ -125,8 +133,16 @@ public class ProxyDroidPreferenceDataStore extends PreferenceDataStore {
 				return p.getPassword() != null ? p.getPassword() : defValue;
 			case Profile.Columns.DOMAIN:
 				return p.getDomain() != null ? p.getDomain() : defValue;
-			case Profile.Columns.CNTLM_CONFIG_PATH:
-				return p.getCntlmConfigPath();
+			case Profile.Columns.NTLM_AUTH_MODE:
+				return p.getNtlmAuthMode();
+			case Profile.Columns.NTLM_USE_HASHES:
+				return Boolean.toString(p.usesNtlmHashes());
+			case Profile.Columns.NTLM_PASS_NTLMV2:
+				return p.getNtlmPassNTLMv2();
+			case Profile.Columns.NTLM_PASS_NT:
+				return p.getNtlmPassNT();
+			case Profile.Columns.NTLM_PASS_LM:
+				return p.getNtlmPassLM();
 			case Profile.Columns.CERTIFICATE:
 				return p.getCertificate() != null ? p.getCertificate() : defValue;
 			case Profile.Columns.SSID:
