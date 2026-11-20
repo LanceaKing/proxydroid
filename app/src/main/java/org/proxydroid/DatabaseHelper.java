@@ -9,7 +9,7 @@ import android.text.TextUtils;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
 	private static final String DATABASE_NAME = "profiles.db";
-	private static final int DATABASE_VERSION = 3;
+	private static final int DATABASE_VERSION = 4;
 
 	private final Context appContext;
 
@@ -47,7 +47,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						+ Profile.Columns.NTLM_PASS_NTLMV2 + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.NTLM_PASS_NT + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.NTLM_PASS_LM + " TEXT NOT NULL DEFAULT '', "
-						+ Profile.Columns.NTLM_RECONFIGURE + " BOOLEAN NOT NULL DEFAULT 0, "
 						+ Profile.Columns.CERTIFICATE + " TEXT NOT NULL DEFAULT '', "
 						+ Profile.Columns.IS_AUTH + " BOOLEAN NOT NULL DEFAULT 0, "
 						+ Profile.Columns.IS_NTLM + " BOOLEAN NOT NULL DEFAULT 0, "
@@ -65,15 +64,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		if (oldVersion < 3) {
+		if (oldVersion < 4) {
 			String table = Profile.TABLE_NAME;
 			String legacy = "profiles_before_ntlm_ui";
-			String columns = TextUtils.join(", ", Profile.Columns.BASE_COLUMNS);
-			String reconfigure = oldVersion >= 2 ? "CASE WHEN cntlmConfigPath <> '' THEN 1 ELSE 0 END" : "0";
+			// Versions 1 and 2 do not have the NTLM method and hash columns.
+			String columns = TextUtils.join(", ", oldVersion < 3 ? Profile.Columns.BASE_COLUMNS : Profile.Columns.ALL_COLUMNS);
 			db.execSQL("ALTER TABLE " + table + " RENAME TO " + legacy);
 			createProfilesTable(db);
-			db.execSQL("INSERT INTO " + table + " (" + columns + ", " + Profile.Columns.NTLM_RECONFIGURE
-					+ ") SELECT " + columns + ", " + reconfigure + " FROM " + legacy);
+			db.execSQL("INSERT INTO " + table + " (" + columns + ") SELECT " + columns + " FROM " + legacy);
 			// Preserve AUTOINCREMENT even if the profile with the highest ID was deleted.
 			db.execSQL("DELETE FROM sqlite_sequence WHERE name = ?", new String[]{table});
 			db.execSQL("UPDATE sqlite_sequence SET name = ? WHERE name = ?", new String[]{table, legacy});

@@ -53,7 +53,6 @@ public class Profile implements Serializable {
 		public static final String NTLM_PASS_NTLMV2 = "ntlmPassNTLMv2";
 		public static final String NTLM_PASS_NT = "ntlmPassNT";
 		public static final String NTLM_PASS_LM = "ntlmPassLM";
-		public static final String NTLM_RECONFIGURE = "ntlmReconfigure";
 		public static final String IS_AUTO_CONNECT = "isAutoConnect";
 		public static final String IS_AUTO_SET_PROXY = "isAutoSetProxy";
 		public static final String IS_BYPASS_APPS = "isBypassApps";
@@ -62,7 +61,7 @@ public class Profile implements Serializable {
 		public static final String SSID = "ssid";
 		public static final String EXCLUDED_SSID = "excludedSsid";
 
-		// All columns shared by the v1, v2 and current schemas.
+		// Columns shared by the v1, v2 and current schemas.
 		static final String[] BASE_COLUMNS = {
 				_ID,
 				PROFILE_NAME,
@@ -88,7 +87,7 @@ public class Profile implements Serializable {
 		public static final String[] ALL_COLUMNS;
 		static {
 			String[] ntlmColumns = {NTLM_AUTH_MODE, NTLM_USE_HASHES, NTLM_PASS_NTLMV2,
-					NTLM_PASS_NT, NTLM_PASS_LM, NTLM_RECONFIGURE};
+					NTLM_PASS_NT, NTLM_PASS_LM};
 			ALL_COLUMNS = Arrays.copyOf(BASE_COLUMNS, BASE_COLUMNS.length + ntlmColumns.length);
 			System.arraycopy(ntlmColumns, 0, ALL_COLUMNS, BASE_COLUMNS.length, ntlmColumns.length);
 		}
@@ -110,7 +109,6 @@ public class Profile implements Serializable {
 	private String ntlmPassNTLMv2;
 	private String ntlmPassNT;
 	private String ntlmPassLM;
-	private boolean ntlmReconfigure;
 	private String proxiedApps;
 	private boolean isAutoConnect = false;
 	private boolean isAutoSetProxy = true;
@@ -141,7 +139,6 @@ public class Profile implements Serializable {
 		ntlmPassNTLMv2 = "";
 		ntlmPassNT = "";
 		ntlmPassLM = "";
-		ntlmReconfigure = false;
 		isAuth = false;
 		proxyType = "http";
 		isAutoConnect = false;
@@ -481,7 +478,6 @@ public class Profile implements Serializable {
 	public String getNtlmPassNTLMv2() { return ntlmPassNTLMv2; }
 	public String getNtlmPassNT() { return ntlmPassNT; }
 	public String getNtlmPassLM() { return ntlmPassLM; }
-	public boolean needsNtlmReconfiguration() { return ntlmReconfigure; }
 
 	public static Profile fromCursor(Cursor c) {
 		Profile p = new Profile();
@@ -498,7 +494,6 @@ public class Profile implements Serializable {
 		p.ntlmPassNTLMv2 = c.getString(c.getColumnIndexOrThrow(Columns.NTLM_PASS_NTLMV2));
 		p.ntlmPassNT = c.getString(c.getColumnIndexOrThrow(Columns.NTLM_PASS_NT));
 		p.ntlmPassLM = c.getString(c.getColumnIndexOrThrow(Columns.NTLM_PASS_LM));
-		p.ntlmReconfigure = c.getInt(c.getColumnIndexOrThrow(Columns.NTLM_RECONFIGURE)) != 0;
 		p.proxiedApps = c.getString(c.getColumnIndexOrThrow(Columns.PROXIED_APPS));
 		p.isAutoConnect = c.getInt(c.getColumnIndexOrThrow(Columns.IS_AUTO_CONNECT)) != 0;
 		p.isAutoSetProxy = c.getInt(c.getColumnIndexOrThrow(Columns.IS_AUTO_SET_PROXY)) != 0;

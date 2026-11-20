@@ -18,7 +18,6 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
@@ -44,7 +43,6 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 	private ListPreference ntlmMode;
 	private ListPreference ntlmCredentials;
 	private EditTextPreference[] ntlmHashes;
-	private Preference reviewNtlm;
 
 	CheckBoxPreference isAutoConnectCheck;
 	CheckBoxPreference isAutoSetProxyCheck;
@@ -194,25 +192,6 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 				return false;
 			});
 		}
-		reviewNtlm = findPreference("reviewNtlmSettings");
-		reviewNtlm.setOnPreferenceClickListener(pref -> {
-			long id = ProfileStore.getActiveProfileId(requireContext());
-			new AlertDialog.Builder(requireContext())
-					.setTitle(R.string.ntlm_reconfigure_title)
-					.setMessage(R.string.ntlm_reconfigure_message)
-					.setPositiveButton(R.string.ntlm_reconfigure_enable, (dialog, which) -> confirmNtlm(id, true))
-					.setNeutralButton(R.string.ntlm_reconfigure_disable, (dialog, which) -> confirmNtlm(id, false))
-					.setNegativeButton(android.R.string.cancel, null)
-					.show();
-			return true;
-		});
-	}
-
-	private void confirmNtlm(long id, boolean enable) {
-		Context context = requireContext();
-		if (id < 0 || id != ProfileStore.getActiveProfileId(context)) return;
-		int error = ProfileStore.confirmNtlmSettings(context, id, enable);
-		if (error != 0) Toast.makeText(context, error, Toast.LENGTH_LONG).show();
 	}
 
 	private boolean canUseNtlm() {
@@ -362,7 +341,6 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 			ntlmHashes[i].setText(values[i]);
 			ntlmHashes[i].setSummary(values[i].isEmpty() ? getString(R.string.ntlm_hash_format) : "*********");
 		}
-		reviewNtlm.setVisible(p.needsNtlmReconfiguration());
 		isAutoConnectCheck.setChecked(p.isAutoConnect());
 		isAutoSetProxyCheck.setChecked(p.isAutoSetProxy());
 		isBypassAppsCheck.setChecked(p.isBypassApps());
@@ -543,7 +521,6 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		domainText.setEnabled(true);
 		ntlmMode.setEnabled(true);
 		ntlmCredentials.setEnabled(true);
-		reviewNtlm.setEnabled(true);
 		if ("https".equals(proxyTypeList.getValue())) {
 			certificateText.setEnabled(true);
 		} else {
@@ -583,7 +560,6 @@ public class ProxyDroidPreferenceFragment extends PreferenceFragmentCompat {
 		ntlmMode.setEnabled(false);
 		ntlmCredentials.setEnabled(false);
 		for (EditTextPreference hash : ntlmHashes) hash.setEnabled(false);
-		reviewNtlm.setEnabled(false);
 		certificateText.setEnabled(false);
 		ssidList.setEnabled(false);
 		excludedSsidList.setEnabled(false);

@@ -47,6 +47,11 @@ a second TLS installation. Native upstream TLS and all cntlm parent connections
 link those same libraries. cntlm delegates transport to its host and has no
 independent TLS selection. NTLM's legacy digest/DES code is not a TLS transport.
 
+ProxyDroid generates its embedded cntlm configuration from the
+[profile's NTLM settings](../README.md#configure-ntlm-authentication).
+The standalone tools retain their own configuration interfaces. See the
+[redsocks embedding guide](../app/src/main/cpp/redsocks/docs/embedding.md).
+
 JDK 17, Python 3.9+, Perl, Make, Android NDK 25.1.8937393 and SDK CMake 3.22.1
 are required for Android builds. The minimum remains API 19 for 32-bit ABIs
 and API 21 for 64-bit ABIs. TLS below 1.2 stays disabled in the engine.

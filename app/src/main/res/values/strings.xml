@@ -199,11 +199,6 @@
     <string name="ntlm_password_required">Enter the proxy password or select password hashes under NTLM Authentication.</string>
     <string name="ntlm_host_required">Enter the proxy address or Profile PAC URL before using NTLM.</string>
     <string name="ntlm_proxy_type_error">NTLM authentication requires HTTP, HTTPS, or HTTP CONNECT.</string>
-    <string name="ntlm_reconfigure_title">Review NTLM settings</string>
-    <string name="ntlm_reconfigure_message">This profile used a cntlm.conf file. Re-enter its proxy and NTLM settings here, or choose to continue with NTLM disabled.</string>
-    <string name="ntlm_reconfigure_enable">Use NTLM settings</string>
-    <string name="ntlm_reconfigure_disable">Continue without NTLM</string>
-    <string name="ntlm_reconfigure_check">Enable Authentication and NTLM Authentication to use your NTLM settings.</string>
     <string name="engine_connecting">Starting proxy engine…</string>
     <string name="engine_disconnected">Proxy engine disconnected</string>
 </resources>

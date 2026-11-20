@@ -55,7 +55,6 @@ public final class NtlmSettings {
 
 	/** A null effective type means the Profile's PAC has not yet been evaluated. */
 	public static int startError(Bundle profile, String effectiveType) {
-		if (profile.getBoolean(Profile.Columns.NTLM_RECONFIGURE)) return R.string.ntlm_reconfigure_message;
 		if (!requested(profile)) return 0;
 		if (effectiveType != null && !supportsProxyType(effectiveType)) {
 			// Stored NTLM settings are dormant for a directly selected SOCKS profile.

@@ -100,10 +100,6 @@
         <EditTextPreference android:key="ntlmPassNTLMv2" android:title="PassNTLMv2" />
         <EditTextPreference android:key="ntlmPassNT" android:title="PassNT" />
         <EditTextPreference android:key="ntlmPassLM" android:title="PassLM" />
-        <Preference
-            android:key="reviewNtlmSettings"
-            android:title="@string/ntlm_reconfigure_title"
-            android:summary="@string/ntlm_reconfigure_message" />
 
         <EditTextPreference
             android:key="certificate"

@@ -25,7 +25,6 @@ public final class ProxyServiceHelper {
 		bundle.putString(Profile.Columns.NTLM_PASS_NTLMV2, profile.getNtlmPassNTLMv2());
 		bundle.putString(Profile.Columns.NTLM_PASS_NT, profile.getNtlmPassNT());
 		bundle.putString(Profile.Columns.NTLM_PASS_LM, profile.getNtlmPassLM());
-		bundle.putBoolean(Profile.Columns.NTLM_RECONFIGURE, profile.needsNtlmReconfiguration());
 		bundle.putString(Profile.Columns.PROXIED_APPS, profile.getProxiedApps());
 		bundle.putString(Profile.Columns.PROXY_TYPE, profile.getProxyType());
 		bundle.putBoolean(Profile.Columns.IS_AUTO_SET_PROXY, profile.isAutoSetProxy());
